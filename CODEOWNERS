@@ -1,0 +1,3 @@
+# This file has been initially provisioned with terraform. Consider adding members to a team below instead of changing this file
+# Consider changing this file only if adding a more granular ownership (for example on a subfolder)
+* @gocombo/code-owners-diag
