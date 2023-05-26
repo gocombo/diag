@@ -29,6 +29,8 @@ test: lint ${cover_dir} .cover-packages
 	go test -coverpkg=$(shell cat .cover-packages) -coverprofile=${cover_profile} ./...
 	go tool cover -html=${cover_profile} -o ${cover_html}
 
+test-bench:
+	go test -bench=. -benchmem
 
 ${cover_dir}/coverage-func.txt: ${cover_profile}
 	go tool cover -func=${cover_profile} -o $@
