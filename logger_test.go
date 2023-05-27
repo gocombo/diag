@@ -43,26 +43,11 @@ func TestLoggerLevel(t *testing.T) {
 	}
 
 	tests := []testCase{
-		{
-			log:       log.Error(),
-			wantLevel: "error",
-		},
-		{
-			log:       log.Warn(),
-			wantLevel: "warn",
-		},
-		{
-			log:       log.Info(),
-			wantLevel: "info",
-		},
-		{
-			log:       log.Debug(),
-			wantLevel: "debug",
-		},
-		{
-			log:       log.Trace(),
-			wantLevel: "trace",
-		},
+		{log: log.Error(), wantLevel: "error"},
+		{log: log.Warn(), wantLevel: "warn"},
+		{log: log.Info(), wantLevel: "info"},
+		{log: log.Debug(), wantLevel: "debug"},
+		{log: log.Trace(), wantLevel: "trace"},
 	}
 
 	for _, tt := range tests {
