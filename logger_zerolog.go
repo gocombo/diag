@@ -1,6 +1,7 @@
 package diag
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -23,11 +24,16 @@ func newZerologLogger(p *RootContextParams) LevelLogger {
 		logger = zerolog.New(out)
 	}
 
+	zeroLogLevel, err := zerolog.ParseLevel(string(p.logLevel))
+	if err != nil {
+		panic(fmt.Errorf("invalid log level %s: %w", p.logLevel, err))
+	}
+
 	logger = logger.
 		With().
 		Timestamp().
 		Logger().
-		Level(zerolog.DebugLevel)
+		Level(zeroLogLevel)
 
 	logger = logger.With().
 		Dict("context", zerolog.Dict().

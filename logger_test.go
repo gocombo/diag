@@ -32,6 +32,7 @@ func TestLoggerLevel(t *testing.T) {
 
 	ctx := RootContext(
 		NewRootContextParams().
+			WithLogLevel(LogLevelTraceValue).
 			WithOutput(outputWriter).
 			WithCorrelationID(uuid.Must(uuid.NewV4()).String()),
 	)

@@ -15,10 +15,13 @@ type RootContextParams struct {
 	correlationID string
 	pretty        bool
 	out           io.Writer
+	logLevel      LogLevel
 }
 
 func NewRootContextParams() *RootContextParams {
-	return &RootContextParams{}
+	return &RootContextParams{
+		logLevel: LogLevelDebugValue,
+	}
 }
 
 func RootContext(p *RootContextParams) context.Context {
@@ -39,5 +42,10 @@ func (c *RootContextParams) WithPretty(value bool) *RootContextParams {
 
 func (c *RootContextParams) WithOutput(output io.Writer) *RootContextParams {
 	c.out = output
+	return c
+}
+
+func (c *RootContextParams) WithLogLevel(logLevel LogLevel) *RootContextParams {
+	c.logLevel = logLevel
 	return c
 }

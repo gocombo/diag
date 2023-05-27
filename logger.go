@@ -13,6 +13,16 @@ func init() {
 	zerolog.MessageFieldName = "msg"
 }
 
+type LogLevel string
+
+const (
+	LogLevelTraceValue LogLevel = "trace"
+	LogLevelDebugValue LogLevel = "debug"
+	LogLevelInfoValue  LogLevel = "info"
+	LogLevelWarnValue  LogLevel = "warn"
+	LogLevelErrorValue LogLevel = "error"
+)
+
 // MsgData defines a standard interface for adding data to a log message
 type MsgData interface {
 	Str(key string, value string) MsgData
