@@ -1,6 +1,7 @@
 package diag
 
 import (
+	"io"
 	"testing"
 
 	"github.com/jaswdr/faker"
@@ -22,6 +23,10 @@ func TestRootContext(t *testing.T) {
 		wantCorrelationID := fake.UUID().V4()
 		ctx := RootContext(
 			NewRootContextParams().
+				WithLogLevel(LogLevelInfoValue).
+				WithLoggerFactory(zerologLoggerFactory{}).
+				WithOutput(io.Discard).
+				WithPretty(fake.Bool()).
 				WithCorrelationID(wantCorrelationID),
 		)
 		log := Log(ctx)
