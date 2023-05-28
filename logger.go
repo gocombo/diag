@@ -1,8 +1,6 @@
 package diag
 
 import (
-	"context"
-	"fmt"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -22,6 +20,10 @@ const (
 	LogLevelWarnValue  LogLevel = "warn"
 	LogLevelErrorValue LogLevel = "error"
 )
+
+func (l LogLevel) String() string {
+	return string(l)
+}
 
 // MsgData defines a standard interface for adding data to a log message
 type MsgData interface {
@@ -74,11 +76,26 @@ type MsgData interface {
 }
 
 type LevelLogger interface {
+	// Error starts a new event with a warn level
 	Error() LogLevelEvent
+
+	// Warn starts a new event with a warn level
 	Warn() LogLevelEvent
+
+	// Info starts a new event with a info level
 	Info() LogLevelEvent
+
+	// Debug starts a new event with a debug level
 	Debug() LogLevelEvent
+
+	// Trace starts a new event with a trace level
 	Trace() LogLevelEvent
+
+	// WithLevel starts a new event with a given level
+	// Useful if level is defined at run time
+	WithLevel(level LogLevel) LogLevelEvent
+
+	// NewData creates a new MsgData object
 	NewData() MsgData
 }
 
@@ -93,13 +110,4 @@ type LogLevelEvent interface {
 type LogMessageEvent interface {
 	Msg(msg string)
 	Msgf(fmt string, v ...interface{})
-}
-
-func Log(ctx context.Context) LevelLogger {
-	logger, ok := ctx.Value(contextKeyLogger).(LevelLogger)
-	if !ok {
-		// TODO: Better message
-		panic(fmt.Errorf("context does not contain a logger"))
-	}
-	return logger
 }

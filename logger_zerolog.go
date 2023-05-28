@@ -8,15 +8,25 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func newZerologLogger(p *RootContextParams) LevelLogger {
+func mustParseZerologLevel(level LogLevel) zerolog.Level {
+	zeroLogLevel, err := zerolog.ParseLevel(level.String())
+	if err != nil {
+		panic(fmt.Errorf("invalid log level %s: %w", level, err))
+	}
+	return zeroLogLevel
+}
+
+type zerologLoggerFactory struct{}
+
+func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 	var logger zerolog.Logger
 
 	var out io.Writer = os.Stderr
-	if p.out != nil {
-		out = p.out
+	if p.Out != nil {
+		out = p.Out
 	}
 
-	if p.pretty {
+	if p.Pretty {
 		logger = zerolog.New(
 			zerolog.ConsoleWriter{Out: out},
 		)
@@ -24,26 +34,29 @@ func newZerologLogger(p *RootContextParams) LevelLogger {
 		logger = zerolog.New(out)
 	}
 
-	zeroLogLevel, err := zerolog.ParseLevel(string(p.logLevel))
-	if err != nil {
-		panic(fmt.Errorf("invalid log level %s: %w", p.logLevel, err))
-	}
-
 	logger = logger.
 		With().
 		Timestamp().
 		Logger().
-		Level(zeroLogLevel)
+		Level(mustParseZerologLevel(p.LogLevel))
 
 	logger = logger.With().
 		Dict("context", zerolog.Dict().
-			Str("correlationId", p.correlationID),
+			Str("correlationId", p.diagData.CorrelationID),
 		).
 		Logger()
 
 	return &zerologLevelLogger{
 		logger,
 	}
+}
+
+func (zerologLoggerFactory) ForkLogger(logger LevelLogger, opts ForkOpts) LevelLogger {
+	zerologLogger, ok := logger.(*zerologLevelLogger)
+	if !ok {
+		panic("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger")
+	}
+	return zerologLogger
 }
 
 type zerologLevelLogger struct {
@@ -82,8 +95,18 @@ func (l *zerologLevelLogger) Trace() LogLevelEvent {
 	return &zerologLogLevelEvent{Event: l.Logger.Trace()}
 }
 
+func (l *zerologLevelLogger) WithLevel(level LogLevel) LogLevelEvent {
+	// TODO: It should emit warn event instead of potential panic
+	return &zerologLogLevelEvent{Event: l.Logger.WithLevel(mustParseZerologLevel(level))}
+}
+
 func (l *zerologLevelLogger) NewData() MsgData {
 	return &zerologLogData{Event: zerolog.Dict()}
+}
+
+func (l *zerologLevelLogger) NewLevelLogger(level LogLevel) LevelLogger {
+	// TODO: It should emit warn event instead of potential panic
+	return &zerologLevelLogger{Logger: l.Logger.Level(mustParseZerologLevel(level))}
 }
 
 func (l zerologLogLevelEvent) WithDataFn(dataFn func(data MsgData)) LogLevelEvent {
