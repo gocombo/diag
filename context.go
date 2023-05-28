@@ -26,12 +26,12 @@ type RootContextParams struct {
 	Out           io.Writer
 	LogLevel      LogLevel
 	LoggerFactory LoggerFactory
-	diagData      DiagContextData
+	diagData      ContextDiagData
 }
 
-// DiagContextData is a structure that can be used to hold various
+// ContextDiagData is a structure that can be used to hold various
 // diagnostic data that will be added to the log entries
-type DiagContextData struct {
+type ContextDiagData struct {
 	// CorrelationID will be added to each log entry to allow correlating logs
 	CorrelationID string
 
@@ -46,7 +46,7 @@ func NewRootContextParams() *RootContextParams {
 		Out:           os.Stderr,
 		LogLevel:      LogLevelDebugValue,
 		LoggerFactory: zerologLoggerFactory{},
-		diagData: DiagContextData{
+		diagData: ContextDiagData{
 			CorrelationID: rootContextID,
 		},
 	}
@@ -54,7 +54,9 @@ func NewRootContextParams() *RootContextParams {
 
 func RootContext(p *RootContextParams) context.Context {
 	logger := p.LoggerFactory.NewLogger(p)
-	return context.WithValue(context.Background(), contextKeyLogger, logger)
+	ctx := context.WithValue(context.Background(), contextKeyLogger, logger)
+	ctx = context.WithValue(ctx, contextKeyDiagData, p.diagData)
+	return ctx
 }
 
 // WithCorrelationID allows setting a predefined root correlation id
@@ -94,6 +96,15 @@ func Log(ctx context.Context) LevelLogger {
 		panic(fmt.Errorf("context does not contain a logger"))
 	}
 	return logger
+}
+
+// DiagData returns the diag data from the context
+func DiagData(ctx context.Context) ContextDiagData {
+	diagData, ok := ctx.Value(contextKeyDiagData).(ContextDiagData)
+	if !ok {
+		panic(fmt.Errorf("context does not contain diag data"))
+	}
+	return diagData
 }
 
 type ForkOpts struct {
