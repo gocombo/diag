@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRootContext(t *testing.T) {
+func TestContext_RootContext(t *testing.T) {
 	fake := faker.New()
 
 	t.Run("initializes a new diag context", func(t *testing.T) {
