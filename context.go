@@ -139,7 +139,7 @@ func ForkWithAppendDiagEntries(entries map[string]string) ForkContextOption {
 	}
 }
 
-// ForkContext creates a derived diag context. Will only copy diag and logger data.
+// ForkContext creates a copy of a given context. Will only copy diag and logger data.
 // The context created is not a child of the original context
 // so signals will not be propagated.
 func ForkContext(ctx context.Context, opts ...ForkContextOption) context.Context {
@@ -156,6 +156,14 @@ func ForkContext(ctx context.Context, opts ...ForkContextOption) context.Context
 	diagData := DiagData(ctx)
 	if forkOpts.CorrelationID != nil {
 		diagData.CorrelationID = *forkOpts.CorrelationID
+	}
+	if len(forkOpts.AppendDiagEntries) > 0 {
+		if diagData.Entries == nil {
+			diagData.Entries = make(map[string]string)
+		}
+		for k, v := range forkOpts.AppendDiagEntries {
+			diagData.Entries[k] = v
+		}
 	}
 
 	log := loggerFactory.ForkLogger(Log(ctx), forkOpts)

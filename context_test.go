@@ -67,10 +67,10 @@ func TestContext_ForkContext(t *testing.T) {
 		}
 		forkedDiagData := DiagData(forkedCtx)
 		assert.NotEqual(t, rootDiagData, forkedDiagData)
-		// assert.Equal(t, wantCorrelationID, forkedDiagData.CorrelationID)
-		// assert.Equal(t, wantEntries, forkedDiagData.Entries)
+		assert.Equal(t, wantCorrelationID, forkedDiagData.CorrelationID)
+		assert.Equal(t, wantEntries, forkedDiagData.Entries)
 
-		// assert.NotNil(t, forkedCtx.Value(contextKeyLoggerFactory))
-		// assert.Equal(t, ctx.Value(contextKeyLoggerFactory), forkedCtx.Value(contextKeyLoggerFactory))
+		assert.NotNil(t, forkedCtx.Value(contextKeyLoggerFactory))
+		assert.Equal(t, ctx.Value(contextKeyLoggerFactory), forkedCtx.Value(contextKeyLoggerFactory))
 	})
 }

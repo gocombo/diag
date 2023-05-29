@@ -56,6 +56,7 @@ func (zerologLoggerFactory) ForkLogger(logger LevelLogger, opts ForkOpts) LevelL
 	if !ok {
 		panic("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger")
 	}
+	// TODO: Set log level
 	nextLogger := zerologLevelLogger{
 		Logger: zerologLogger.Logger,
 	}
