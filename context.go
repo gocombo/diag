@@ -94,7 +94,6 @@ func (c *RootContextParams) WithLoggerFactory(factory LoggerFactory) *RootContex
 func Log(ctx context.Context) LevelLogger {
 	logger, ok := ctx.Value(contextKeyLogger).(LevelLogger)
 	if !ok {
-		// TODO: Better message
 		panic(fmt.Errorf("context does not contain a logger"))
 	}
 	return logger

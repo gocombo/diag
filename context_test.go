@@ -43,6 +43,48 @@ func TestContext_RootContext(t *testing.T) {
 	})
 }
 
+func TestContext_Accessors(t *testing.T) {
+	t.Run("Log", func(t *testing.T) {
+		t.Run("returns the logger if one is set", func(t *testing.T) {
+			ctx := RootContext(NewRootContextParams())
+			assert.NotNil(t, Log(ctx))
+			assert.Implements(t, (*LevelLogger)(nil), Log(ctx))
+		})
+		t.Run("panics if no logger", func(t *testing.T) {
+			assert.PanicsWithError(
+				t,
+				"context does not contain a logger",
+				func() { Log(context.Background()) })
+		})
+	})
+	t.Run("DiagData", func(t *testing.T) {
+		t.Run("returns the diag data if one is set", func(t *testing.T) {
+			ctx := RootContext(NewRootContextParams())
+			assert.NotNil(t, DiagData(ctx))
+			assert.IsType(t, DiagData(ctx), ContextDiagData{})
+		})
+		t.Run("panics if no diag data", func(t *testing.T) {
+			assert.PanicsWithError(
+				t,
+				"context does not contain diag data",
+				func() { DiagData(context.Background()) })
+		})
+	})
+	t.Run("LoggerFactory", func(t *testing.T) {
+		t.Run("returns the logger factory if one is set", func(t *testing.T) {
+			ctx := RootContext(NewRootContextParams())
+			assert.NotNil(t, getLoggerFactory(ctx))
+			assert.Implements(t, (*LoggerFactory)(nil), getLoggerFactory(ctx))
+		})
+		t.Run("panics if no logger factory", func(t *testing.T) {
+			assert.PanicsWithError(
+				t,
+				"context does not contain a logger factory",
+				func() { getLoggerFactory(context.Background()) })
+		})
+	})
+}
+
 func TestContext_DiagifyContext(t *testing.T) {
 	t.Run("creates a child diag context with given values", func(t *testing.T) {
 		diagContext := RootContext(NewRootContextParams())
