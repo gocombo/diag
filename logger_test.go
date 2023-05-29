@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/jaswdr/faker"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,8 +24,6 @@ type TestLogMessage struct {
 }
 
 func TestLoggerLevel(t *testing.T) {
-	fake := faker.New()
-
 	var output bytes.Buffer
 	outputWriter := bufio.NewWriter(&output)
 
