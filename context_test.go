@@ -1,6 +1,7 @@
 package diag
 
 import (
+	"context"
 	"io"
 	"testing"
 
@@ -57,9 +58,9 @@ func TestContext_ForkContext(t *testing.T) {
 		}
 
 		forkedCtx := ForkContext(ctx,
-			ForkWithLogLevel(LogLevelInfoValue),
-			ForkWithCorrelationID(wantCorrelationID),
-			ForkWithAppendDiagEntries(wantEntries),
+			WithLogLevel(LogLevelInfoValue),
+			WithCorrelationID(wantCorrelationID),
+			WithAppendDiagEntries(wantEntries),
 		)
 		forkedLog := Log(forkedCtx)
 		if ok := assert.NotSame(t, rootLog, forkedLog); !ok {
@@ -72,5 +73,17 @@ func TestContext_ForkContext(t *testing.T) {
 
 		assert.NotNil(t, forkedCtx.Value(contextKeyLoggerFactory))
 		assert.Equal(t, ctx.Value(contextKeyLoggerFactory), forkedCtx.Value(contextKeyLoggerFactory))
+	})
+	t.Run("creates a copy but not child context", func(t *testing.T) {
+		type testContextKey string
+		var testContextKeyFoo testContextKey = testContextKey(fake.Lorem().Word())
+		ctx, cancel := context.WithCancel(RootContext(NewRootContextParams()))
+		ctx = context.WithValue(ctx, testContextKeyFoo, fake.Lorem().Sentence(3))
+
+		cancel()
+
+		forkedCtx := ForkContext(ctx)
+		assert.Nil(t, forkedCtx.Value(testContextKeyFoo))
+		assert.Nil(t, forkedCtx.Err())
 	})
 }

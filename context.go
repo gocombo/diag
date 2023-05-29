@@ -19,7 +19,7 @@ const (
 
 type LoggerFactory interface {
 	NewLogger(p *RootContextParams) LevelLogger
-	ForkLogger(logger LevelLogger, opts ForkOpts) LevelLogger
+	ForkLogger(logger LevelLogger, opts DiagOpts) LevelLogger
 }
 
 type RootContextParams struct {
@@ -109,7 +109,7 @@ func DiagData(ctx context.Context) ContextDiagData {
 	return diagData
 }
 
-type ForkOpts struct {
+type DiagOpts struct {
 	Level *LogLevel
 
 	// Use a new correlation ID for the child logger
@@ -119,22 +119,22 @@ type ForkOpts struct {
 	AppendDiagEntries map[string]string
 }
 
-type ForkContextOption func(opts *ForkOpts)
+type DiagContextOption func(opts *DiagOpts)
 
-func ForkWithLogLevel(level LogLevel) ForkContextOption {
-	return func(opts *ForkOpts) {
+func WithLogLevel(level LogLevel) DiagContextOption {
+	return func(opts *DiagOpts) {
 		opts.Level = &level
 	}
 }
 
-func ForkWithCorrelationID(correlationID string) ForkContextOption {
-	return func(opts *ForkOpts) {
+func WithCorrelationID(correlationID string) DiagContextOption {
+	return func(opts *DiagOpts) {
 		opts.CorrelationID = &correlationID
 	}
 }
 
-func ForkWithAppendDiagEntries(entries map[string]string) ForkContextOption {
-	return func(opts *ForkOpts) {
+func WithAppendDiagEntries(entries map[string]string) DiagContextOption {
+	return func(opts *DiagOpts) {
 		opts.AppendDiagEntries = entries
 	}
 }
@@ -142,8 +142,8 @@ func ForkWithAppendDiagEntries(entries map[string]string) ForkContextOption {
 // ForkContext creates a copy of a given context. Will only copy diag and logger data.
 // The context created is not a child of the original context
 // so signals will not be propagated.
-func ForkContext(ctx context.Context, opts ...ForkContextOption) context.Context {
-	var forkOpts ForkOpts
+func ForkContext(ctx context.Context, opts ...DiagContextOption) context.Context {
+	var forkOpts DiagOpts
 	for _, opt := range opts {
 		opt(&forkOpts)
 	}
@@ -168,7 +168,8 @@ func ForkContext(ctx context.Context, opts ...ForkContextOption) context.Context
 
 	log := loggerFactory.ForkLogger(Log(ctx), forkOpts)
 
-	forkedCtx := context.WithValue(ctx, contextKeyLogger, log)
-	forkedCtx = context.WithValue(forkedCtx, contextKeyDiagData, diagData)
+	forkedCtx := context.WithValue(context.Background(), contextKeyLogger, log)
+	forkedCtx = context.WithValue(forkedCtx, contextKeyDiagData, log)
+	forkedCtx = context.WithValue(forkedCtx, contextKeyLoggerFactory, loggerFactory)
 	return forkedCtx
 }
