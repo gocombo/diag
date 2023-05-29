@@ -43,6 +43,42 @@ func TestContext_RootContext(t *testing.T) {
 	})
 }
 
+func TestContext_DiagifyContext(t *testing.T) {
+	t.Run("creates a child diag context with given values", func(t *testing.T) {
+		diagContext := RootContext(NewRootContextParams())
+
+		wantCorrelationID := fake.UUID().V4()
+
+		wantEntries := map[string]string{
+			fake.Lorem().Word(): fake.Lorem().Word(),
+			fake.Lorem().Word(): fake.Lorem().Word(),
+			fake.Lorem().Word(): fake.Lorem().Word(),
+		}
+
+		type testContextKey string
+		var testContextKeyFoo testContextKey = testContextKey(fake.Lorem().Word())
+		wantTestValue := fake.Lorem().Sentence(3)
+		parentCtx := context.WithValue(context.Background(), testContextKeyFoo, wantTestValue)
+
+		diagifiedCtx := DiagifyContext(
+			parentCtx,
+			diagContext,
+			WithLogLevel(LogLevelInfoValue),
+			WithCorrelationID(wantCorrelationID),
+			WithAppendDiagEntries(wantEntries),
+		)
+		forkedLog := Log(diagifiedCtx)
+		forkedDiagData := DiagData(diagifiedCtx)
+		assert.NotNil(t, forkedLog)
+		assert.Equal(t, wantCorrelationID, forkedDiagData.CorrelationID)
+		assert.Equal(t, wantEntries, forkedDiagData.Entries)
+		assert.Equal(t, wantTestValue, diagifiedCtx.Value(testContextKeyFoo))
+
+		assert.NotNil(t, diagifiedCtx.Value(contextKeyLoggerFactory))
+		assert.Equal(t, diagContext.Value(contextKeyLoggerFactory), diagifiedCtx.Value(contextKeyLoggerFactory))
+	})
+}
+
 func TestContext_ForkContext(t *testing.T) {
 	t.Run("creates a new diag context with given values", func(t *testing.T) {
 		ctx := RootContext(NewRootContextParams())

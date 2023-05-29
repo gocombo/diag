@@ -19,7 +19,7 @@ const (
 
 type LoggerFactory interface {
 	NewLogger(p *RootContextParams) LevelLogger
-	ForkLogger(logger LevelLogger, opts DiagOpts) LevelLogger
+	ChildLogger(logger LevelLogger, opts DiagOpts) LevelLogger
 }
 
 type RootContextParams struct {
@@ -109,6 +109,14 @@ func DiagData(ctx context.Context) ContextDiagData {
 	return diagData
 }
 
+func getLoggerFactory(ctx context.Context) LoggerFactory {
+	loggerFactory, ok := ctx.Value(contextKeyLoggerFactory).(LoggerFactory)
+	if !ok {
+		panic(fmt.Errorf("context does not contain a logger factory"))
+	}
+	return loggerFactory
+}
+
 type DiagOpts struct {
 	Level *LogLevel
 
@@ -139,37 +147,44 @@ func WithAppendDiagEntries(entries map[string]string) DiagContextOption {
 	}
 }
 
-// ForkContext creates a copy of a given context. Will only copy diag and logger data.
-// The context created is not a child of the original context
-// so signals will not be propagated.
-func ForkContext(ctx context.Context, opts ...DiagContextOption) context.Context {
-	var forkOpts DiagOpts
+// DiagifyContext creates a child context with diag data taken from
+// the diagContext and optionally adjusted via opts.
+func DiagifyContext(
+	parentCtx context.Context,
+	diagContext context.Context,
+	opts ...DiagContextOption,
+) context.Context {
+	var diagOpts DiagOpts
 	for _, opt := range opts {
-		opt(&forkOpts)
+		opt(&diagOpts)
 	}
 
-	loggerFactory, ok := ctx.Value(contextKeyLoggerFactory).(LoggerFactory)
-	if !ok {
-		panic(fmt.Errorf("context does not contain a logger factory"))
+	diagData := DiagData(diagContext)
+	if diagOpts.CorrelationID != nil {
+		diagData.CorrelationID = *diagOpts.CorrelationID
 	}
-
-	diagData := DiagData(ctx)
-	if forkOpts.CorrelationID != nil {
-		diagData.CorrelationID = *forkOpts.CorrelationID
-	}
-	if len(forkOpts.AppendDiagEntries) > 0 {
+	if len(diagOpts.AppendDiagEntries) > 0 {
 		if diagData.Entries == nil {
 			diagData.Entries = make(map[string]string)
 		}
-		for k, v := range forkOpts.AppendDiagEntries {
+		for k, v := range diagOpts.AppendDiagEntries {
 			diagData.Entries[k] = v
 		}
 	}
 
-	log := loggerFactory.ForkLogger(Log(ctx), forkOpts)
+	loggerFactory := getLoggerFactory(diagContext)
+	log := loggerFactory.ChildLogger(Log(diagContext), diagOpts)
 
-	forkedCtx := context.WithValue(context.Background(), contextKeyLogger, log)
-	forkedCtx = context.WithValue(forkedCtx, contextKeyDiagData, log)
-	forkedCtx = context.WithValue(forkedCtx, contextKeyLoggerFactory, loggerFactory)
-	return forkedCtx
+	resultCtx := context.WithValue(parentCtx, contextKeyLogger, log)
+	resultCtx = context.WithValue(resultCtx, contextKeyDiagData, diagData)
+	resultCtx = context.WithValue(resultCtx, contextKeyLoggerFactory, loggerFactory)
+
+	return resultCtx
+}
+
+// ForkContext creates a copy of a given diag context. Will only copy diag and logger data.
+// The context created is not a child of the original context
+// so signals will not be propagated.
+func ForkContext(ctx context.Context, opts ...DiagContextOption) context.Context {
+	return DiagifyContext(context.Background(), ctx, opts...)
 }

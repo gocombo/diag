@@ -51,7 +51,7 @@ func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 	}
 }
 
-func (zerologLoggerFactory) ForkLogger(logger LevelLogger, opts DiagOpts) LevelLogger {
+func (zerologLoggerFactory) ChildLogger(logger LevelLogger, opts DiagOpts) LevelLogger {
 	zerologLogger, ok := logger.(*zerologLevelLogger)
 	if !ok {
 		panic("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger")
