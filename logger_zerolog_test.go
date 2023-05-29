@@ -44,5 +44,13 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 			assert.Contains(t, outputStr, msg)
 			assert.NotContains(t, outputStr, `"msg":"`+msg+`"`)
 		})
+
+		t.Run("panics if unknown log level", func(t *testing.T) {
+			assert.Panics(t, func() {
+				factory.NewLogger(&RootContextParams{
+					LogLevel: LogLevel(fake.Lorem().Word()),
+				})
+			})
+		})
 	})
 }
