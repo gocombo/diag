@@ -49,6 +49,7 @@ func NewRootContextParams() *RootContextParams {
 		LoggerFactory: zerologLoggerFactory{},
 		DiagData: ContextDiagData{
 			CorrelationID: rootContextID,
+			Entries:       map[string]string{},
 		},
 	}
 }
@@ -152,9 +153,9 @@ func DiagifyContext(
 	opts ...DiagContextOption,
 ) context.Context {
 	// TODO: Check if it's not mutated
-	diagData := DiagData(diagContext)
+	rootDiagData := DiagData(diagContext)
 	diagOpts := DiagOpts{
-		DiagData: diagData,
+		DiagData: rootDiagData,
 	}
 	for _, opt := range opts {
 		opt(&diagOpts)
@@ -164,7 +165,7 @@ func DiagifyContext(
 	log := loggerFactory.ChildLogger(Log(diagContext), diagOpts)
 
 	resultCtx := context.WithValue(parentCtx, contextKeyLogger, log)
-	resultCtx = context.WithValue(resultCtx, contextKeyDiagData, diagData)
+	resultCtx = context.WithValue(resultCtx, contextKeyDiagData, diagOpts.DiagData)
 	resultCtx = context.WithValue(resultCtx, contextKeyLoggerFactory, loggerFactory)
 
 	return resultCtx

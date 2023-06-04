@@ -109,9 +109,9 @@ func TestContext_DiagifyContext(t *testing.T) {
 			WithCorrelationID(wantCorrelationID),
 			WithAppendDiagEntries(wantEntries),
 		)
-		forkedLog := Log(diagifiedCtx)
+		diagifiedLog := Log(diagifiedCtx)
 		forkedDiagData := DiagData(diagifiedCtx)
-		assert.NotNil(t, forkedLog)
+		assert.NotNil(t, diagifiedLog)
 		assert.Equal(t, wantCorrelationID, forkedDiagData.CorrelationID)
 		assert.Equal(t, wantEntries, forkedDiagData.Entries)
 		assert.Equal(t, wantTestValue, diagifiedCtx.Value(testContextKeyFoo))
