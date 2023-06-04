@@ -89,14 +89,12 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 				DiagData: rootDiagParams,
 			})
 
-			nextLogLevel := LogLevelInfoValue
 			nextCorrelationId := fake.UUID().V4()
 			wantChildEntries := map[string]string{
 				"ch-key1": fake.Lorem().Word(),
 				"ch-key2": fake.Lorem().Word(),
 			}
 			childLogger := factory.ChildLogger(rootLogger, DiagOpts{
-				Level: &nextLogLevel,
 				DiagData: ContextDiagData{
 					CorrelationID: nextCorrelationId,
 					Entries:       wantChildEntries,
@@ -120,6 +118,34 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 					"ch-key2":       wantChildEntries["ch-key2"],
 				},
 			}, logMessage)
+		})
+		t.Run("creates a derived logger with custom level", func(t *testing.T) {
+			var output bytes.Buffer
+			outputWriter := bufio.NewWriter(&output)
+
+			rootDiagParams := ContextDiagData{
+				CorrelationID: fake.UUID().V4(),
+				Entries:       map[string]string{},
+			}
+			rootLogger := factory.NewLogger(&RootContextParams{
+				LogLevel: LogLevelTraceValue,
+				Out:      outputWriter,
+				DiagData: rootDiagParams,
+			})
+
+			nextLogLevel := LogLevelWarnValue
+
+			childLogger := factory.ChildLogger(rootLogger, DiagOpts{
+				Level:    &nextLogLevel,
+				DiagData: rootDiagParams,
+			})
+			assert.IsType(t, &zerologLevelLogger{}, childLogger)
+
+			msg := fake.Lorem().Sentence(3)
+			childLogger.Info().Msg(msg)
+
+			outputWriter.Flush()
+			assert.Empty(t, output.String())
 		})
 	})
 }

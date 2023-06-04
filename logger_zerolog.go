@@ -72,6 +72,10 @@ func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) L
 		Dict("context", contextData).
 		Logger()
 
+	if diagOpts.Level != nil {
+		childLogger = childLogger.Level(mustParseZerologLevel(*diagOpts.Level))
+	}
+
 	// TODO: Set log level
 	return &zerologLevelLogger{
 		Logger: childLogger,
