@@ -167,7 +167,6 @@ func DiagifyContext(
 	diagContext context.Context,
 	opts ...DiagContextOption,
 ) context.Context {
-	// TODO: Check if it's not mutated
 	rootDiagData := DiagData(diagContext)
 	diagOpts := DiagOpts{
 		DiagData: rootDiagData,

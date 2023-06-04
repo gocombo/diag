@@ -76,7 +76,6 @@ func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) L
 		childLogger = childLogger.Level(mustParseZerologLevel(*diagOpts.Level))
 	}
 
-	// TODO: Set log level
 	return &zerologLevelLogger{
 		Logger: childLogger,
 	}
