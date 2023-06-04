@@ -110,10 +110,16 @@ func Log(ctx context.Context) LevelLogger {
 }
 
 // DiagData returns the diag data from the context
+// A copy of a diag data is returned so can not be mutated
 func DiagData(ctx context.Context) ContextDiagData {
 	diagData, ok := ctx.Value(contextKeyDiagData).(ContextDiagData)
 	if !ok {
 		panic(fmt.Errorf("context does not contain diag data"))
+	}
+	sourceEntries := diagData.Entries
+	diagData.Entries = make(map[string]string, len(sourceEntries))
+	for k, v := range sourceEntries {
+		diagData.Entries[k] = v
 	}
 	return diagData
 }
