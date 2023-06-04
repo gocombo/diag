@@ -69,6 +69,15 @@ func (c *RootContextParams) WithCorrelationID(value string) *RootContextParams {
 	return c
 }
 
+// WithDiagEntries will assign diag entries for the root context
+// the root entries will be propagated to all forked/diagified contexts
+func (c *RootContextParams) WithDiagEntries(entries map[string]string) *RootContextParams {
+	for k, v := range entries {
+		c.DiagData.Entries[k] = v
+	}
+	return c
+}
+
 func (c *RootContextParams) WithPretty(value bool) *RootContextParams {
 	c.Pretty = value
 	return c

@@ -119,6 +119,42 @@ func TestContext_DiagifyContext(t *testing.T) {
 		assert.NotNil(t, diagifiedCtx.Value(contextKeyLoggerFactory))
 		assert.Equal(t, diagContext.Value(contextKeyLoggerFactory), diagifiedCtx.Value(contextKeyLoggerFactory))
 	})
+	t.Run("does not mutates original diag context", func(t *testing.T) {
+		rootEntries := map[string]string{
+			"root1-" + fake.Lorem().Word(): fake.Lorem().Word(),
+			"root2-" + fake.Lorem().Word(): fake.Lorem().Word(),
+			"root3-" + fake.Lorem().Word(): fake.Lorem().Word(),
+		}
+		rootCorrelationID := fake.UUID().V4()
+		diagContext := RootContext(
+			NewRootContextParams().
+				WithCorrelationID(rootCorrelationID).
+				WithDiagEntries(rootEntries),
+		)
+
+		wantCorrelationID := fake.UUID().V4()
+
+		wantEntries := map[string]string{
+			"diagified1-" + fake.Lorem().Word(): fake.Lorem().Word(),
+			"diagified2-" + fake.Lorem().Word(): fake.Lorem().Word(),
+			"diagified3-" + fake.Lorem().Word(): fake.Lorem().Word(),
+		}
+
+		diagifiedCtx := DiagifyContext(
+			context.Background(),
+			diagContext,
+			WithLogLevel(LogLevelInfoValue),
+			WithCorrelationID(wantCorrelationID),
+			WithAppendDiagEntries(wantEntries),
+		)
+		rootDiagData := DiagData(diagContext)
+		forkedDiagData := DiagData(diagifiedCtx)
+
+		assert.Equal(t, rootCorrelationID, rootDiagData.CorrelationID)
+		assert.Equal(t, rootEntries, rootDiagData.Entries)
+
+		assert.Len(t, forkedDiagData.Entries, len(wantEntries)+len(rootEntries))
+	})
 }
 
 func TestContext_ForkContext(t *testing.T) {
