@@ -19,7 +19,7 @@ const (
 
 type LoggerFactory interface {
 	NewLogger(p *RootContextParams) LevelLogger
-	ChildLogger(logger LevelLogger, opts DiagOpts) LevelLogger
+	ChildLogger(logger LevelLogger, diagOpts DiagOpts) LevelLogger
 }
 
 type RootContextParams struct {
@@ -119,11 +119,7 @@ func getLoggerFactory(ctx context.Context) LoggerFactory {
 type DiagOpts struct {
 	Level *LogLevel
 
-	// Use a new correlation ID for the child logger
-	CorrelationID *string
-
-	// AppendEntries will be added to each log entry in addition to existing entries present
-	AppendDiagEntries map[string]string
+	DiagData ContextDiagData
 }
 
 type DiagContextOption func(opts *DiagOpts)
@@ -136,13 +132,15 @@ func WithLogLevel(level LogLevel) DiagContextOption {
 
 func WithCorrelationID(correlationID string) DiagContextOption {
 	return func(opts *DiagOpts) {
-		opts.CorrelationID = &correlationID
+		opts.DiagData.CorrelationID = correlationID
 	}
 }
 
 func WithAppendDiagEntries(entries map[string]string) DiagContextOption {
 	return func(opts *DiagOpts) {
-		opts.AppendDiagEntries = entries
+		for k, v := range entries {
+			opts.DiagData.Entries[k] = v
+		}
 	}
 }
 
@@ -153,22 +151,13 @@ func DiagifyContext(
 	diagContext context.Context,
 	opts ...DiagContextOption,
 ) context.Context {
-	var diagOpts DiagOpts
+	// TODO: Check if it's not mutated
+	diagData := DiagData(diagContext)
+	diagOpts := DiagOpts{
+		DiagData: diagData,
+	}
 	for _, opt := range opts {
 		opt(&diagOpts)
-	}
-
-	diagData := DiagData(diagContext)
-	if diagOpts.CorrelationID != nil {
-		diagData.CorrelationID = *diagOpts.CorrelationID
-	}
-	if len(diagOpts.AppendDiagEntries) > 0 {
-		if diagData.Entries == nil {
-			diagData.Entries = make(map[string]string)
-		}
-		for k, v := range diagOpts.AppendDiagEntries {
-			diagData.Entries[k] = v
-		}
 	}
 
 	loggerFactory := getLoggerFactory(diagContext)

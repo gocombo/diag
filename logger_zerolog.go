@@ -40,10 +40,14 @@ func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 		Logger().
 		Level(mustParseZerologLevel(p.LogLevel))
 
+	contextData := zerolog.Dict().
+		Str("correlationId", p.DiagData.CorrelationID)
+	for k, v := range p.DiagData.Entries {
+		contextData = contextData.Str(k, v)
+	}
+
 	logger = logger.With().
-		Dict("context", zerolog.Dict().
-			Str("correlationId", p.DiagData.CorrelationID),
-		).
+		Dict("context", contextData).
 		Logger()
 
 	return &zerologLevelLogger{
@@ -51,17 +55,30 @@ func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 	}
 }
 
-func (zerologLoggerFactory) ChildLogger(logger LevelLogger, opts DiagOpts) LevelLogger {
+func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) LevelLogger {
 	zerologLogger, ok := logger.(*zerologLevelLogger)
 	if !ok {
 		panic("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger")
 	}
-	// TODO: Set log level
-	nextLogger := zerologLevelLogger{
-		Logger: zerologLogger.Logger,
+
+	diagData := diagOpts.DiagData
+
+	contextData := zerolog.Dict().
+		Str("correlationId", diagData.CorrelationID)
+	for k, v := range diagData.Entries {
+		contextData = contextData.Str(k, v)
 	}
-	return &nextLogger
+	childLogger := zerologLogger.Logger.With().
+		Dict("context", contextData).
+		Logger()
+
+	// TODO: Set log level
+	return &zerologLevelLogger{
+		Logger: childLogger,
+	}
 }
+
+var _ LoggerFactory = zerologLoggerFactory{}
 
 type zerologLevelLogger struct {
 	zerolog.Logger

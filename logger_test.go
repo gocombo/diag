@@ -16,11 +16,11 @@ type TestContext struct {
 }
 
 // TestLogMessage used for testing purposes only
-type TestLogMessage struct {
-	Level   string      `json:"level"`
-	Msg     string      `json:"msg"`
-	Time    string      `json:"time"`
-	Context TestContext `json:"context"`
+type TestLogMessage[TCtx any] struct {
+	Level   string `json:"level"`
+	Msg     string `json:"msg"`
+	Time    string `json:"time"`
+	Context TCtx   `json:"context"`
 }
 
 func TestLoggerLevel(t *testing.T) {
@@ -55,10 +55,10 @@ func TestLoggerLevel(t *testing.T) {
 			tt.log.Msg(msg)
 			outputWriter.Flush()
 
-			var logMessage TestLogMessage
+			var logMessage TestLogMessage[TestContext]
 			assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
 
-			assert.Equal(t, TestLogMessage{
+			assert.Equal(t, TestLogMessage[TestContext]{
 				Level: tt.wantLevel,
 				Msg:   msg,
 				Time:  logMessage.Time,
