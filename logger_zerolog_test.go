@@ -346,10 +346,12 @@ func TestZerolog_LogData(t *testing.T) {
 			}
 		},
 		func(data MsgData) testCase {
+			value := []uint8{fake.UInt8(), fake.UInt8()}
 			return testCase{
-				name:  "Uints8",
-				value: []uint8{fake.UInt8(), fake.UInt8()},
-				fn:    castLotDataFieldFn(data.Uints8),
+				name:          "Uints8",
+				value:         value,
+				expectedValue: []interface{}{float64(value[0]), float64(value[1])},
+				fn:            castLotDataFieldFn(data.Uints8),
 			}
 		},
 		func(data MsgData) testCase {
