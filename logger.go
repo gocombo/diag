@@ -33,7 +33,7 @@ type MsgData interface {
 	Stringer(key string, value fmt.Stringer) MsgData
 	Bytes(key string, val []byte) MsgData
 	Hex(key string, val []byte) MsgData
-	// RawJSON(key string, b []byte) MsgData
+	RawJSON(key string, b []byte) MsgData
 	// Bool(key string, b bool) MsgData
 	// Bools(key string, b []bool) MsgData
 	// Int(key string, i int) MsgData

@@ -23,6 +23,7 @@ func main() {
 		{name: "Stringer", valueType: Qual("fmt", "Stringer")},
 		{name: "Bytes", valueType: Index().Byte()},
 		{name: "Hex", valueType: Index().Byte()},
+		{name: "RawJSON", valueType: Index().Byte()},
 	}
 
 	for _, fieldFunction := range fieldFunctions {

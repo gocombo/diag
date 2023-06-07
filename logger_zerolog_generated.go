@@ -25,3 +25,7 @@ func (d *zerologLogData) Bytes(key string, value []byte) MsgData {
 func (d *zerologLogData) Hex(key string, value []byte) MsgData {
 	return &zerologLogData{Event: d.Event.Hex(key, value)}
 }
+
+func (d *zerologLogData) RawJSON(key string, value []byte) MsgData {
+	return &zerologLogData{Event: d.Event.RawJSON(key, value)}
+}

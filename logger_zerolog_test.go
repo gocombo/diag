@@ -226,6 +226,19 @@ func TestZerolog_LogData(t *testing.T) {
 				fn:            castLotDataFieldFn(data.Hex),
 			}
 		},
+		func(data MsgData) testCase {
+			value := map[string]interface{}{
+				"key1": fake.Lorem().Word(),
+				"key2": fake.Lorem().Word(),
+			}
+			rawJSON, _ := json.Marshal(value)
+			return testCase{
+				name:          "RawJSON",
+				value:         rawJSON,
+				expectedValue: value,
+				fn:            castLotDataFieldFn(data.RawJSON),
+			}
+		},
 	}
 
 	var output bytes.Buffer
