@@ -433,6 +433,21 @@ func TestZerolog_LogData(t *testing.T) {
 				fn:            castLotDataFieldFn(data.Time),
 			}
 		},
+		func(data MsgData) testCase {
+			value := []time.Time{
+				fake.Time().Time(time.Now()),
+				fake.Time().Time(time.Now()),
+			}
+			return testCase{
+				name:  "Times",
+				value: value,
+				expectedValue: []interface{}{
+					value[0].Format(time.RFC3339Nano),
+					value[1].Format(time.RFC3339Nano),
+				},
+				fn: castLotDataFieldFn(data.Times),
+			}
+		},
 	}
 
 	var output bytes.Buffer

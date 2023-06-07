@@ -140,3 +140,7 @@ func (d *zerologLogData) Floats64(key string, value []float64) MsgData {
 func (d *zerologLogData) Time(key string, value time.Time) MsgData {
 	return &zerologLogData{Event: d.Event.Time(key, value)}
 }
+
+func (d *zerologLogData) Times(key string, value []time.Time) MsgData {
+	return &zerologLogData{Event: d.Event.Times(key, value)}
+}

@@ -51,6 +51,7 @@ func main() {
 		{name: "Float64", valueType: Float64()},
 		{name: "Floats64", valueType: Index().Float64()},
 		{name: "Time", valueType: Qual("time", "Time")},
+		{name: "Times", valueType: Index().Qual("time", "Time")},
 	}
 
 	for _, fieldFunction := range fieldFunctions {

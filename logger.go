@@ -61,7 +61,7 @@ type MsgData interface {
 	Float64(key string, i float64) MsgData
 	Floats64(key string, i []float64) MsgData
 	Time(key string, i time.Time) MsgData
-	// Times(key string, i []time.Time) MsgData
+	Times(key string, i []time.Time) MsgData
 	// Duration(key string, i time.Duration) MsgData
 	// Durations(key string, i []time.Duration) MsgData
 	// IPAddr(key string, ip net.IP) MsgData
