@@ -46,6 +46,10 @@ func main() {
 		{name: "Uints32", valueType: Index().Uint32()},
 		{name: "Uint64", valueType: Uint64()},
 		{name: "Uints64", valueType: Index().Uint64()},
+		{name: "Float32", valueType: Float32()},
+		{name: "Floats32", valueType: Index().Float32()},
+		{name: "Float64", valueType: Float64()},
+		{name: "Floats64", valueType: Index().Float64()},
 	}
 
 	for _, fieldFunction := range fieldFunctions {

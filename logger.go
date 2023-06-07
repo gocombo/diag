@@ -56,10 +56,10 @@ type MsgData interface {
 	Uints32(key string, i []uint32) MsgData
 	Uint64(key string, i uint64) MsgData
 	Uints64(key string, i []uint64) MsgData
-	// Float32(key string, i float32) MsgData
-	// Floats32(key string, i []float32) MsgData
-	// Float64(key string, i float64) MsgData
-	// Floats64(key string, i []float64) MsgData
+	Float32(key string, i float32) MsgData
+	Floats32(key string, i []float32) MsgData
+	Float64(key string, i float64) MsgData
+	Floats64(key string, i []float64) MsgData
 	// Time(key string, i time.Time) MsgData
 	// Times(key string, i []time.Time) MsgData
 	// Duration(key string, i time.Duration) MsgData

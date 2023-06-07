@@ -393,6 +393,34 @@ func TestZerolog_LogData(t *testing.T) {
 				fn:    castLotDataFieldFn(data.Uints64),
 			}
 		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Float32",
+				value: fake.Float32(5, 10, 100000),
+				fn:    castLotDataFieldFn(data.Float32),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Floats32",
+				value: []float32{fake.Float32(5, 10, 100000), fake.Float32(5, 10, 100000)},
+				fn:    castLotDataFieldFn(data.Floats32),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Float64",
+				value: fake.Float64(5, 10, 100000),
+				fn:    castLotDataFieldFn(data.Float64),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Floats64",
+				value: []float64{fake.Float64(5, 10, 100000), fake.Float64(5, 10, 100000)},
+				fn:    castLotDataFieldFn(data.Floats64),
+			}
+		},
 	}
 
 	var output bytes.Buffer

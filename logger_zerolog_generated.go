@@ -117,3 +117,19 @@ func (d *zerologLogData) Uint64(key string, value uint64) MsgData {
 func (d *zerologLogData) Uints64(key string, value []uint64) MsgData {
 	return &zerologLogData{Event: d.Event.Uints64(key, value)}
 }
+
+func (d *zerologLogData) Float32(key string, value float32) MsgData {
+	return &zerologLogData{Event: d.Event.Float32(key, value)}
+}
+
+func (d *zerologLogData) Floats32(key string, value []float32) MsgData {
+	return &zerologLogData{Event: d.Event.Floats32(key, value)}
+}
+
+func (d *zerologLogData) Float64(key string, value float64) MsgData {
+	return &zerologLogData{Event: d.Event.Float64(key, value)}
+}
+
+func (d *zerologLogData) Floats64(key string, value []float64) MsgData {
+	return &zerologLogData{Event: d.Event.Floats64(key, value)}
+}
