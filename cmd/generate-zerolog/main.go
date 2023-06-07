@@ -13,57 +13,63 @@ func main() {
 	f.Comment("MsgData fields functions").Line()
 
 	type fieldFunctionsDef struct {
-		name      string
-		valueType *Statement
+		loggerFn     string
+		zerologField string
+		valueType    *Statement
 	}
 
 	fieldFunctions := []fieldFunctionsDef{
-		{name: "Str", valueType: String()},
-		{name: "Strs", valueType: Index().String()},
-		{name: "Stringer", valueType: Qual("fmt", "Stringer")},
-		{name: "Bytes", valueType: Index().Byte()},
-		{name: "Hex", valueType: Index().Byte()},
-		{name: "RawJSON", valueType: Index().Byte()},
-		{name: "Bool", valueType: Bool()},
-		{name: "Bools", valueType: Index().Bool()},
-		{name: "Int", valueType: Int()},
-		{name: "Ints", valueType: Index().Int()},
-		{name: "Int8", valueType: Int8()},
-		{name: "Ints8", valueType: Index().Int8()},
-		{name: "Int16", valueType: Int16()},
-		{name: "Ints16", valueType: Index().Int16()},
-		{name: "Int32", valueType: Int32()},
-		{name: "Ints32", valueType: Index().Int32()},
-		{name: "Int64", valueType: Int64()},
-		{name: "Ints64", valueType: Index().Int64()},
-		{name: "Uint", valueType: Uint()},
-		{name: "Uints", valueType: Index().Uint()},
-		{name: "Uint8", valueType: Uint8()},
-		{name: "Uints8", valueType: Index().Uint8()},
-		{name: "Uint16", valueType: Uint16()},
-		{name: "Uints16", valueType: Index().Uint16()},
-		{name: "Uint32", valueType: Uint32()},
-		{name: "Uints32", valueType: Index().Uint32()},
-		{name: "Uint64", valueType: Uint64()},
-		{name: "Uints64", valueType: Index().Uint64()},
-		{name: "Float32", valueType: Float32()},
-		{name: "Floats32", valueType: Index().Float32()},
-		{name: "Float64", valueType: Float64()},
-		{name: "Floats64", valueType: Index().Float64()},
-		{name: "Time", valueType: Qual("time", "Time")},
-		{name: "Times", valueType: Index().Qual("time", "Time")},
+		{loggerFn: "Str", valueType: String()},
+		{loggerFn: "Strs", valueType: Index().String()},
+		{loggerFn: "Stringer", valueType: Qual("fmt", "Stringer")},
+		{loggerFn: "Bytes", valueType: Index().Byte()},
+		{loggerFn: "Hex", valueType: Index().Byte()},
+		{loggerFn: "RawJSON", valueType: Index().Byte()},
+		{loggerFn: "Bool", valueType: Bool()},
+		{loggerFn: "Bools", valueType: Index().Bool()},
+		{loggerFn: "Int", valueType: Int()},
+		{loggerFn: "Ints", valueType: Index().Int()},
+		{loggerFn: "Int8", valueType: Int8()},
+		{loggerFn: "Ints8", valueType: Index().Int8()},
+		{loggerFn: "Int16", valueType: Int16()},
+		{loggerFn: "Ints16", valueType: Index().Int16()},
+		{loggerFn: "Int32", valueType: Int32()},
+		{loggerFn: "Ints32", valueType: Index().Int32()},
+		{loggerFn: "Int64", valueType: Int64()},
+		{loggerFn: "Ints64", valueType: Index().Int64()},
+		{loggerFn: "Uint", valueType: Uint()},
+		{loggerFn: "Uints", valueType: Index().Uint()},
+		{loggerFn: "Uint8", valueType: Uint8()},
+		{loggerFn: "Uints8", valueType: Index().Uint8()},
+		{loggerFn: "Uint16", valueType: Uint16()},
+		{loggerFn: "Uints16", valueType: Index().Uint16()},
+		{loggerFn: "Uint32", valueType: Uint32()},
+		{loggerFn: "Uints32", valueType: Index().Uint32()},
+		{loggerFn: "Uint64", valueType: Uint64()},
+		{loggerFn: "Uints64", valueType: Index().Uint64()},
+		{loggerFn: "Float32", valueType: Float32()},
+		{loggerFn: "Floats32", valueType: Index().Float32()},
+		{loggerFn: "Float64", valueType: Float64()},
+		{loggerFn: "Floats64", valueType: Index().Float64()},
+		{loggerFn: "Time", valueType: Qual("time", "Time")},
+		{loggerFn: "Times", valueType: Index().Qual("time", "Time")},
 	}
 
 	for _, fieldFunction := range fieldFunctions {
+		loggerFn := fieldFunction.loggerFn
+		zerologField := fieldFunction.zerologField
+		if zerologField == "" {
+			zerologField = loggerFn
+		}
 		f.Func().Params(
 			Id("d").Op("*").Id("zerologLogData"),
-		).Id(fieldFunction.name).Params(
+		).Id(loggerFn).Params(
 			Id("key").String(),
 			Id("value").Add(fieldFunction.valueType),
 		).Id("MsgData").Block(
 			Return(Op("&").Id("zerologLogData").Values(
 				Dict{
-					Id("Event"): Id("d").Dot("Event").Dot(fieldFunction.name).Call(Id("key"), Id("value")),
+					Id("Event"): Id("d").Dot("Event").Dot(zerologField).Call(Id("key"), Id("value")),
 				},
 			)),
 		).Line()
