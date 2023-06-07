@@ -1,3 +1,5 @@
+//go:generate sh -c "go run ./cmd/generate-zerolog/... > logger_zerolog_generated.go"
+
 package diag
 
 import (
@@ -93,18 +95,6 @@ type zerologLogLevelEvent struct {
 
 type zerologLogData struct {
 	*zerolog.Event
-}
-
-func (d *zerologLogData) Str(key, value string) MsgData {
-	return &zerologLogData{Event: d.Event.Str(key, value)}
-}
-
-func (d *zerologLogData) Strs(key string, value []string) MsgData {
-	return &zerologLogData{Event: d.Event.Strs(key, value)}
-}
-
-func (d *zerologLogData) Stringer(key string, value fmt.Stringer) MsgData {
-	return &zerologLogData{Event: d.Event.Stringer(key, value)}
 }
 
 var _ MsgData = &zerologLogData{}

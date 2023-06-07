@@ -3,6 +3,7 @@ module github.com/gocombo/diag
 go 1.20
 
 require (
+	github.com/dave/jennifer v1.6.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jaswdr/faker v1.17.0
 	github.com/rs/zerolog v1.29.1

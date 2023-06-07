@@ -178,6 +178,9 @@ func TestZerolog_LogData(t *testing.T) {
 		name  string
 		value any
 		fn    logDataFieldFn[any]
+
+		// expectedValue should be provided if serialization makes it different from value
+		expectedValue any
 	}
 
 	type testCaseFn func(data MsgData) testCase
@@ -204,6 +207,15 @@ func TestZerolog_LogData(t *testing.T) {
 				fn:    castLotDataFieldFn(data.Stringer),
 			}
 		},
+		func(data MsgData) testCase {
+			value := fake.Lorem().Bytes(10)
+			return testCase{
+				name:          "Bytes",
+				value:         value,
+				expectedValue: string(value),
+				fn:            castLotDataFieldFn(data.Bytes),
+			}
+		},
 	}
 
 	var output bytes.Buffer
@@ -219,17 +231,21 @@ func TestZerolog_LogData(t *testing.T) {
 			wantKey := fake.Lorem().Word()
 			wantValue := tt.value
 			data := tt.fn(wantKey, wantValue)
-			var wantData = jsonify(map[string]interface{}{
-				wantKey: wantValue,
-			})
+			if tt.expectedValue != nil {
+				wantValue = tt.expectedValue
+			} else {
+				wantValue = jsonify(tt.value)
+			}
 			logger.Info().WithData(data).Msg(fake.Lorem().Sentence(3))
 
 			outputWriter.Flush()
 			var logMessage map[string]interface{}
 			json.Unmarshal(output.Bytes(), &logMessage)
 
-			gotData := logMessage["data"]
-			assert.Equal(t, wantData, gotData)
+			gotData := logMessage["data"].(map[string]interface{})
+			assert.Equal(t, map[string]interface{}{
+				wantKey: wantValue,
+			}, gotData)
 		})
 	}
 }
