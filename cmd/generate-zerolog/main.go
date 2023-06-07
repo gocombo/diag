@@ -53,6 +53,9 @@ func main() {
 		{loggerFn: "Floats64", valueType: Index().Float64()},
 		{loggerFn: "Time", valueType: Qual("time", "Time")},
 		{loggerFn: "Times", valueType: Index().Qual("time", "Time")},
+		{loggerFn: "IPAddr", valueType: Qual("net", "IP")},
+		{loggerFn: "IPPrefix", valueType: Qual("net", "IPNet")},
+		{loggerFn: "MACAddr", valueType: Qual("net", "HardwareAddr")},
 	}
 
 	for _, fieldFunction := range fieldFunctions {

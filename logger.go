@@ -2,6 +2,7 @@ package diag
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -62,9 +63,9 @@ type MsgData interface {
 	Floats64(key string, i []float64) MsgData
 	Time(key string, i time.Time) MsgData
 	Times(key string, i []time.Time) MsgData
-	// IPAddr(key string, ip net.IP) MsgData
-	// IPPrefix(key string, pfx net.IPNet) MsgData
-	// MACAddr(key string, ha net.HardwareAddr) MsgData
+	IPAddr(key string, ip net.IP) MsgData
+	IPPrefix(key string, pfx net.IPNet) MsgData
+	MACAddr(key string, ha net.HardwareAddr) MsgData
 
 	// // Creates nested dictionary under a given key
 	// Dict(key string, data MsgData) MsgData

@@ -4,6 +4,7 @@ package diag
 
 import (
 	"fmt"
+	"net"
 	"time"
 )
 
@@ -143,4 +144,16 @@ func (d *zerologLogData) Time(key string, value time.Time) MsgData {
 
 func (d *zerologLogData) Times(key string, value []time.Time) MsgData {
 	return &zerologLogData{Event: d.Event.Times(key, value)}
+}
+
+func (d *zerologLogData) IPAddr(key string, value net.IP) MsgData {
+	return &zerologLogData{Event: d.Event.IPAddr(key, value)}
+}
+
+func (d *zerologLogData) IPPrefix(key string, value net.IPNet) MsgData {
+	return &zerologLogData{Event: d.Event.IPPrefix(key, value)}
+}
+
+func (d *zerologLogData) MACAddr(key string, value net.HardwareAddr) MsgData {
+	return &zerologLogData{Event: d.Event.MACAddr(key, value)}
 }

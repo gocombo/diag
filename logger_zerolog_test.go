@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -446,6 +447,40 @@ func TestZerolog_LogData(t *testing.T) {
 					value[1].Format(time.RFC3339Nano),
 				},
 				fn: castLotDataFieldFn(data.Times),
+			}
+		},
+		func(data MsgData) testCase {
+			value := net.ParseIP(fake.Internet().Ipv4())
+			return testCase{
+				name:  "IPAddr",
+				value: value,
+				fn:    castLotDataFieldFn(data.IPAddr),
+			}
+		},
+		func(data MsgData) testCase {
+			ip := fake.Internet().Ipv4()
+			mask := fake.IntBetween(8, 32)
+			_, addr, err := net.ParseCIDR(fmt.Sprintf("%v/%v", ip, mask))
+			if err != nil {
+				panic(err)
+			}
+			return testCase{
+				name:          "IPPrefix",
+				value:         *addr,
+				expectedValue: addr.String(),
+				fn:            castLotDataFieldFn(data.IPPrefix),
+			}
+		},
+		func(data MsgData) testCase {
+			mac, err := net.ParseMAC(fake.Internet().MacAddress())
+			if err != nil {
+				panic(err)
+			}
+			return testCase{
+				name:          "MACAddr",
+				value:         mac,
+				expectedValue: mac.String(),
+				fn:            castLotDataFieldFn(data.MACAddr),
 			}
 		},
 	}
