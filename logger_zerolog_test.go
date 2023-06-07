@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -419,6 +420,15 @@ func TestZerolog_LogData(t *testing.T) {
 				name:  "Floats64",
 				value: []float64{fake.Float64(5, 10, 100000), fake.Float64(5, 10, 100000)},
 				fn:    castLotDataFieldFn(data.Floats64),
+			}
+		},
+		func(data MsgData) testCase {
+			value := fake.Time().Time(time.Now())
+			return testCase{
+				name:          "Time",
+				value:         value,
+				expectedValue: value.Format(time.RFC3339Nano),
+				fn:            castLotDataFieldFn(data.Time),
 			}
 		},
 	}

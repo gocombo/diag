@@ -2,7 +2,10 @@
 
 package diag
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // MsgData fields functions
 
@@ -132,4 +135,8 @@ func (d *zerologLogData) Float64(key string, value float64) MsgData {
 
 func (d *zerologLogData) Floats64(key string, value []float64) MsgData {
 	return &zerologLogData{Event: d.Event.Floats64(key, value)}
+}
+
+func (d *zerologLogData) Time(key string, value time.Time) MsgData {
+	return &zerologLogData{Event: d.Event.Time(key, value)}
 }
