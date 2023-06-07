@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -148,4 +149,87 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 			assert.Empty(t, output.String())
 		})
 	})
+}
+
+type logDataFieldFn[TVal any] func(key string, value TVal) MsgData
+
+func castLotDataFieldFn[TVal any](fn logDataFieldFn[TVal]) logDataFieldFn[any] {
+	return func(key string, value any) MsgData {
+		return fn(key, value.(TVal))
+	}
+}
+
+func jsonify(data any) any {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+	var result any
+	if err := json.Unmarshal(jsonData, &result); err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func TestZerolog_LogData(t *testing.T) {
+	factory := zerologLoggerFactory{}
+
+	type testCase struct {
+		name  string
+		value any
+		fn    logDataFieldFn[any]
+	}
+
+	type testCaseFn func(data MsgData) testCase
+
+	tests := []testCaseFn{
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Str",
+				value: fake.Lorem().Sentence(3),
+				fn:    castLotDataFieldFn(data.Str),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Strs",
+				value: fake.Lorem().Words(3),
+				fn:    castLotDataFieldFn(data.Strs),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Stringer",
+				value: net.ParseIP(fake.Internet().Ipv4()),
+				fn:    castLotDataFieldFn(data.Stringer),
+			}
+		},
+	}
+
+	var output bytes.Buffer
+	outputWriter := bufio.NewWriter(&output)
+	logger := factory.NewLogger(&RootContextParams{
+		Out: outputWriter, LogLevel: LogLevelDebugValue,
+	})
+	for _, test := range tests {
+		data := logger.NewData()
+		tt := test(data)
+		t.Run(tt.name, func(t *testing.T) {
+			output.Reset()
+			wantKey := fake.Lorem().Word()
+			wantValue := tt.value
+			data := tt.fn(wantKey, wantValue)
+			var wantData = jsonify(map[string]interface{}{
+				wantKey: wantValue,
+			})
+			logger.Info().WithData(data).Msg(fake.Lorem().Sentence(3))
+
+			outputWriter.Flush()
+			var logMessage map[string]interface{}
+			json.Unmarshal(output.Bytes(), &logMessage)
+
+			gotData := logMessage["data"]
+			assert.Equal(t, wantData, gotData)
+		})
+	}
 }

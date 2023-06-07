@@ -1,6 +1,7 @@
 package diag
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -28,8 +29,8 @@ func (l LogLevel) String() string {
 // MsgData defines a standard interface for adding data to a log message
 type MsgData interface {
 	Str(key string, value string) MsgData
-	// Strs(key string, value []string) MsgData
-	// Stringer(key string, value fmt.Stringer) MsgData
+	Strs(key string, value []string) MsgData
+	Stringer(key string, value fmt.Stringer) MsgData
 	// Bytes(key string, val []byte) MsgData
 	// Hex(key string, val []byte) MsgData
 	// RawJSON(key string, b []byte) MsgData
