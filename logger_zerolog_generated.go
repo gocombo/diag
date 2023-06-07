@@ -21,3 +21,7 @@ func (d *zerologLogData) Stringer(key string, value fmt.Stringer) MsgData {
 func (d *zerologLogData) Bytes(key string, value []byte) MsgData {
 	return &zerologLogData{Event: d.Event.Bytes(key, value)}
 }
+
+func (d *zerologLogData) Hex(key string, value []byte) MsgData {
+	return &zerologLogData{Event: d.Event.Hex(key, value)}
+}

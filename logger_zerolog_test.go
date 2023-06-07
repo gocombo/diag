@@ -3,6 +3,7 @@ package diag
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"net"
 	"testing"
@@ -214,6 +215,15 @@ func TestZerolog_LogData(t *testing.T) {
 				value:         value,
 				expectedValue: string(value),
 				fn:            castLotDataFieldFn(data.Bytes),
+			}
+		},
+		func(data MsgData) testCase {
+			value := fake.Lorem().Bytes(10)
+			return testCase{
+				name:          "Hex",
+				value:         value,
+				expectedValue: hex.EncodeToString(value),
+				fn:            castLotDataFieldFn(data.Hex),
 			}
 		},
 	}

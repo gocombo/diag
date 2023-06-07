@@ -22,6 +22,7 @@ func main() {
 		{name: "Strs", valueType: Index().String()},
 		{name: "Stringer", valueType: Qual("fmt", "Stringer")},
 		{name: "Bytes", valueType: Index().Byte()},
+		{name: "Hex", valueType: Index().Byte()},
 	}
 
 	for _, fieldFunction := range fieldFunctions {
