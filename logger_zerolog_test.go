@@ -239,6 +239,160 @@ func TestZerolog_LogData(t *testing.T) {
 				fn:            castLotDataFieldFn(data.RawJSON),
 			}
 		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Bool",
+				value: fake.Bool(),
+				fn:    castLotDataFieldFn(data.Bool),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Bools",
+				value: []bool{fake.Bool(), fake.Bool()},
+				fn:    castLotDataFieldFn(data.Bools),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Int",
+				value: fake.Int(),
+				fn:    castLotDataFieldFn(data.Int),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Ints",
+				value: []int{fake.Int(), fake.Int()},
+				fn:    castLotDataFieldFn(data.Ints),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Int8",
+				value: fake.Int8(),
+				fn:    castLotDataFieldFn(data.Int8),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Ints8",
+				value: []int8{fake.Int8(), fake.Int8()},
+				fn:    castLotDataFieldFn(data.Ints8),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Int16",
+				value: fake.Int16(),
+				fn:    castLotDataFieldFn(data.Int16),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Ints16",
+				value: []int16{fake.Int16(), fake.Int16()},
+				fn:    castLotDataFieldFn(data.Ints16),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Int32",
+				value: fake.Int32(),
+				fn:    castLotDataFieldFn(data.Int32),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Ints32",
+				value: []int32{fake.Int32(), fake.Int32()},
+				fn:    castLotDataFieldFn(data.Ints32),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Int64",
+				value: fake.Int64(),
+				fn:    castLotDataFieldFn(data.Int64),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Ints64",
+				value: []int64{fake.Int64(), fake.Int64()},
+				fn:    castLotDataFieldFn(data.Ints64),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uint",
+				value: fake.UInt(),
+				fn:    castLotDataFieldFn(data.Uint),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uints",
+				value: []uint{fake.UInt(), fake.UInt()},
+				fn:    castLotDataFieldFn(data.Uints),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uint8",
+				value: fake.UInt8(),
+				fn:    castLotDataFieldFn(data.Uint8),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uints8",
+				value: []uint8{fake.UInt8(), fake.UInt8()},
+				fn:    castLotDataFieldFn(data.Uints8),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uint16",
+				value: fake.UInt16(),
+				fn:    castLotDataFieldFn(data.Uint16),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uints16",
+				value: []uint16{fake.UInt16(), fake.UInt16()},
+				fn:    castLotDataFieldFn(data.Uints16),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uint32",
+				value: fake.UInt32(),
+				fn:    castLotDataFieldFn(data.Uint32),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uints32",
+				value: []uint32{fake.UInt32(), fake.UInt32()},
+				fn:    castLotDataFieldFn(data.Uints32),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uint64",
+				value: fake.UInt64(),
+				fn:    castLotDataFieldFn(data.Uint64),
+			}
+		},
+		func(data MsgData) testCase {
+			return testCase{
+				name:  "Uints64",
+				value: []uint64{fake.UInt64(), fake.UInt64()},
+				fn:    castLotDataFieldFn(data.Uints64),
+			}
+		},
 	}
 
 	var output bytes.Buffer

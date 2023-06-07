@@ -29,3 +29,91 @@ func (d *zerologLogData) Hex(key string, value []byte) MsgData {
 func (d *zerologLogData) RawJSON(key string, value []byte) MsgData {
 	return &zerologLogData{Event: d.Event.RawJSON(key, value)}
 }
+
+func (d *zerologLogData) Bool(key string, value bool) MsgData {
+	return &zerologLogData{Event: d.Event.Bool(key, value)}
+}
+
+func (d *zerologLogData) Bools(key string, value []bool) MsgData {
+	return &zerologLogData{Event: d.Event.Bools(key, value)}
+}
+
+func (d *zerologLogData) Int(key string, value int) MsgData {
+	return &zerologLogData{Event: d.Event.Int(key, value)}
+}
+
+func (d *zerologLogData) Ints(key string, value []int) MsgData {
+	return &zerologLogData{Event: d.Event.Ints(key, value)}
+}
+
+func (d *zerologLogData) Int8(key string, value int8) MsgData {
+	return &zerologLogData{Event: d.Event.Int8(key, value)}
+}
+
+func (d *zerologLogData) Ints8(key string, value []int8) MsgData {
+	return &zerologLogData{Event: d.Event.Ints8(key, value)}
+}
+
+func (d *zerologLogData) Int16(key string, value int16) MsgData {
+	return &zerologLogData{Event: d.Event.Int16(key, value)}
+}
+
+func (d *zerologLogData) Ints16(key string, value []int16) MsgData {
+	return &zerologLogData{Event: d.Event.Ints16(key, value)}
+}
+
+func (d *zerologLogData) Int32(key string, value int32) MsgData {
+	return &zerologLogData{Event: d.Event.Int32(key, value)}
+}
+
+func (d *zerologLogData) Ints32(key string, value []int32) MsgData {
+	return &zerologLogData{Event: d.Event.Ints32(key, value)}
+}
+
+func (d *zerologLogData) Int64(key string, value int64) MsgData {
+	return &zerologLogData{Event: d.Event.Int64(key, value)}
+}
+
+func (d *zerologLogData) Ints64(key string, value []int64) MsgData {
+	return &zerologLogData{Event: d.Event.Ints64(key, value)}
+}
+
+func (d *zerologLogData) Uint(key string, value uint) MsgData {
+	return &zerologLogData{Event: d.Event.Uint(key, value)}
+}
+
+func (d *zerologLogData) Uints(key string, value []uint) MsgData {
+	return &zerologLogData{Event: d.Event.Uints(key, value)}
+}
+
+func (d *zerologLogData) Uint8(key string, value uint8) MsgData {
+	return &zerologLogData{Event: d.Event.Uint8(key, value)}
+}
+
+func (d *zerologLogData) Uints8(key string, value []uint8) MsgData {
+	return &zerologLogData{Event: d.Event.Uints8(key, value)}
+}
+
+func (d *zerologLogData) Uint16(key string, value uint16) MsgData {
+	return &zerologLogData{Event: d.Event.Uint16(key, value)}
+}
+
+func (d *zerologLogData) Uints16(key string, value []uint16) MsgData {
+	return &zerologLogData{Event: d.Event.Uints16(key, value)}
+}
+
+func (d *zerologLogData) Uint32(key string, value uint32) MsgData {
+	return &zerologLogData{Event: d.Event.Uint32(key, value)}
+}
+
+func (d *zerologLogData) Uints32(key string, value []uint32) MsgData {
+	return &zerologLogData{Event: d.Event.Uints32(key, value)}
+}
+
+func (d *zerologLogData) Uint64(key string, value uint64) MsgData {
+	return &zerologLogData{Event: d.Event.Uint64(key, value)}
+}
+
+func (d *zerologLogData) Uints64(key string, value []uint64) MsgData {
+	return &zerologLogData{Event: d.Event.Uints64(key, value)}
+}
