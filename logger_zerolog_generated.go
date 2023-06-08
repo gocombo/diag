@@ -157,3 +157,7 @@ func (d *zerologLogData) IPPrefix(key string, value net.IPNet) MsgData {
 func (d *zerologLogData) MACAddr(key string, value net.HardwareAddr) MsgData {
 	return &zerologLogData{Event: d.Event.MACAddr(key, value)}
 }
+
+func (d *zerologLogData) Interface(key string, value interface{}) MsgData {
+	return &zerologLogData{Event: d.Event.Interface(key, value)}
+}

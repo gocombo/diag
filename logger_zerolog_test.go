@@ -504,6 +504,17 @@ func TestZerolog_LogData(t *testing.T) {
 				fn: castLotDataFieldFn(data.Dict),
 			}
 		},
+		func(data MsgData) testCase {
+			value := map[string]interface{}{
+				"key1": fake.Lorem().Word(),
+				"key2": fake.Lorem().Word(),
+			}
+			return testCase{
+				name:  "Interface",
+				value: value,
+				fn:    castLotDataFieldFn(data.Interface),
+			}
+		},
 	}
 
 	for _, test := range tests {

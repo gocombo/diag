@@ -70,9 +70,9 @@ type MsgData interface {
 	// Creates nested dictionary under a given key
 	Dict(key string, data MsgData) MsgData
 
-	// // Interface is usually the slowest method of adding data to a log message
-	// // Prefer using the above methods when possible
-	// Interface(key string, i interface{}) MsgData
+	// Interface is usually the slowest method of adding data to a log message
+	// Prefer using the above methods when possible
+	Interface(key string, i interface{}) MsgData
 }
 
 type LevelLogger interface {

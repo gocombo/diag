@@ -56,6 +56,7 @@ func main() {
 		{loggerFn: "IPAddr", valueType: Qual("net", "IP")},
 		{loggerFn: "IPPrefix", valueType: Qual("net", "IPNet")},
 		{loggerFn: "MACAddr", valueType: Qual("net", "HardwareAddr")},
+		{loggerFn: "Interface", valueType: Interface()},
 	}
 
 	for _, fieldFunction := range fieldFunctions {
