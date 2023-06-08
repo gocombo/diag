@@ -145,7 +145,7 @@ func (l zerologLogLevelEvent) WithDataFn(dataFn func(data MsgData)) LogLevelEven
 func (e zerologLogLevelEvent) WithData(data MsgData) LogLevelEvent {
 	zerologData, ok := data.(*zerologLogData)
 	if !ok {
-		panic("zerologLogLevelEvent.WithData: data is not a *zerologLogData")
+		panic(fmt.Errorf("zerologLogLevelEvent.WithData: data is not a *zerologLogData"))
 	}
 
 	return &zerologLogLevelEvent{
@@ -160,7 +160,7 @@ func (e zerologLogLevelEvent) WithError(err error) LogLevelEvent {
 func (d *zerologLogData) Dict(key string, data MsgData) MsgData {
 	zerologData, ok := data.(*zerologLogData)
 	if !ok {
-		panic("MsgData instance is not zerolog data")
+		panic(fmt.Errorf("MsgData instance is not zerolog data"))
 	}
 	return &zerologLogData{Event: d.Event.Dict(key, zerologData.Event)}
 }
