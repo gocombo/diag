@@ -155,3 +155,11 @@ func (e zerologLogLevelEvent) WithData(data MsgData) LogLevelEvent {
 func (e zerologLogLevelEvent) WithError(err error) LogLevelEvent {
 	return &zerologLogLevelEvent{Event: e.Event.Err(err)}
 }
+
+func (d *zerologLogData) Dict(key string, data MsgData) MsgData {
+	zerologData, ok := data.(*zerologLogData)
+	if !ok {
+		panic("MsgData instance is not zerolog data")
+	}
+	return &zerologLogData{Event: d.Event.Dict(key, zerologData.Event)}
+}

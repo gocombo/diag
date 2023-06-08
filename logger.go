@@ -67,8 +67,8 @@ type MsgData interface {
 	IPPrefix(key string, pfx net.IPNet) MsgData
 	MACAddr(key string, ha net.HardwareAddr) MsgData
 
-	// // Creates nested dictionary under a given key
-	// Dict(key string, data MsgData) MsgData
+	// Creates nested dictionary under a given key
+	Dict(key string, data MsgData) MsgData
 
 	// // Interface is usually the slowest method of adding data to a log message
 	// // Prefer using the above methods when possible

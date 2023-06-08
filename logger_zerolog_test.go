@@ -176,6 +176,11 @@ func jsonify(data any) any {
 
 func TestZerolog_LogData(t *testing.T) {
 	factory := zerologLoggerFactory{}
+	var output bytes.Buffer
+	outputWriter := bufio.NewWriter(&output)
+	logger := factory.NewLogger(&RootContextParams{
+		Out: outputWriter, LogLevel: LogLevelDebugValue,
+	})
 
 	type testCase struct {
 		name  string
@@ -483,13 +488,24 @@ func TestZerolog_LogData(t *testing.T) {
 				fn:            castLotDataFieldFn(data.MACAddr),
 			}
 		},
+		func(data MsgData) testCase {
+			val1 := fake.Lorem().Word()
+			val2 := fake.Lorem().Word()
+			dict := logger.NewData().
+				Str("key1", val1).
+				Str("key2", val2)
+			return testCase{
+				name:  "Dict",
+				value: dict,
+				expectedValue: map[string]interface{}{
+					"key1": val1,
+					"key2": val2,
+				},
+				fn: castLotDataFieldFn(data.Dict),
+			}
+		},
 	}
 
-	var output bytes.Buffer
-	outputWriter := bufio.NewWriter(&output)
-	logger := factory.NewLogger(&RootContextParams{
-		Out: outputWriter, LogLevel: LogLevelDebugValue,
-	})
 	for _, test := range tests {
 		data := logger.NewData()
 		tt := test(data)
