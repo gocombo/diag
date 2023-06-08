@@ -70,11 +70,15 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 		})
 
 		t.Run("panics if unknown log level", func(t *testing.T) {
-			assert.Panics(t, func() {
-				factory.NewLogger(&RootContextParams{
-					LogLevel: LogLevel(fake.Lorem().Word()),
-				})
-			})
+			assert.PanicsWithValue(
+				t,
+				fmt.Errorf("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger"),
+				func() {
+					factory.NewLogger(&RootContextParams{
+						LogLevel: LogLevel(fake.Lorem().Word()),
+					})
+				},
+			)
 		})
 	})
 
@@ -150,6 +154,11 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 
 			outputWriter.Flush()
 			assert.Empty(t, output.String())
+		})
+		t.Run("validates if proper parent logger", func(t *testing.T) {
+			assert.Panics(t, func() {
+				factory.ChildLogger(nil, DiagOpts{})
+			})
 		})
 	})
 }

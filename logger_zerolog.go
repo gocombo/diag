@@ -6,9 +6,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 )
+
+func init() {
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+	zerolog.MessageFieldName = "msg"
+}
 
 func mustParseZerologLevel(level LogLevel) zerolog.Level {
 	zeroLogLevel, err := zerolog.ParseLevel(level.String())
@@ -60,7 +66,7 @@ func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) LevelLogger {
 	zerologLogger, ok := logger.(*zerologLevelLogger)
 	if !ok {
-		panic("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger")
+		panic(fmt.Errorf("zerologLoggerFactory.ForkLogger: logger is not a *zerologLevelLogger"))
 	}
 
 	diagData := diagOpts.DiagData
@@ -126,11 +132,6 @@ func (l *zerologLevelLogger) WithLevel(level LogLevel) LogLevelEvent {
 
 func (l *zerologLevelLogger) NewData() MsgData {
 	return &zerologLogData{Event: zerolog.Dict()}
-}
-
-func (l *zerologLevelLogger) NewLevelLogger(level LogLevel) LevelLogger {
-	// TODO: It should emit warn event instead of potential panic
-	return &zerologLevelLogger{Logger: l.Logger.Level(mustParseZerologLevel(level))}
 }
 
 func (l zerologLogLevelEvent) WithDataFn(dataFn func(data MsgData)) LogLevelEvent {

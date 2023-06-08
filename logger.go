@@ -4,14 +4,7 @@ import (
 	"fmt"
 	"net"
 	"time"
-
-	"github.com/rs/zerolog"
 )
-
-func init() {
-	zerolog.TimeFieldFormat = time.RFC3339Nano
-	zerolog.MessageFieldName = "msg"
-}
 
 type LogLevel string
 
@@ -25,6 +18,11 @@ const (
 
 func (l LogLevel) String() string {
 	return string(l)
+}
+
+func ParseLogLevel(level string) LogLevel {
+	// TODO: Should match and if not matched should return debug
+	return LogLevel(level)
 }
 
 // MsgData defines a standard interface for adding data to a log message

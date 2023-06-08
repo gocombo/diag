@@ -50,22 +50,32 @@ func TestLoggerLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.wantLevel, func(t *testing.T) {
-			output.Reset()
 			msg := fake.Lorem().Sentence(3)
-			tt.log.Msg(msg)
-			outputWriter.Flush()
 
-			var logMessage TestLogMessage[TestContext]
-			assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
-
-			assert.Equal(t, TestLogMessage[TestContext]{
-				Level: tt.wantLevel,
-				Msg:   msg,
-				Time:  logMessage.Time,
-				Context: TestContext{
-					CorrelationID: logMessage.Context.CorrelationID,
+			for _, fn := range []func(){
+				func() {
+					tt.log.Msg(msg)
 				},
-			}, logMessage)
+				func() {
+					log.WithLevel(ParseLogLevel(tt.wantLevel)).Msg(msg)
+				},
+			} {
+				output.Reset()
+				fn()
+				outputWriter.Flush()
+
+				var logMessage TestLogMessage[TestContext]
+				assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
+
+				assert.Equal(t, TestLogMessage[TestContext]{
+					Level: tt.wantLevel,
+					Msg:   msg,
+					Time:  logMessage.Time,
+					Context: TestContext{
+						CorrelationID: logMessage.Context.CorrelationID,
+					},
+				}, logMessage)
+			}
 		})
 	}
 }

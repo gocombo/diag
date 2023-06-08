@@ -12,7 +12,6 @@ import (
 var fake = faker.New()
 
 func TestContext_RootContext(t *testing.T) {
-
 	t.Run("initializes a new diag context", func(t *testing.T) {
 		ctx := RootContext(NewRootContextParams())
 		log := Log(ctx)
