@@ -10,8 +10,42 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 )
+
+type logDataFieldFn[TVal any] func(key string, value TVal) MsgData
+
+func castLotDataFieldFn[TVal any](fn logDataFieldFn[TVal]) logDataFieldFn[any] {
+	return func(key string, value any) MsgData {
+		return fn(key, value.(TVal))
+	}
+}
+
+func jsonify(data any) any {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+	var result any
+	if err := json.Unmarshal(jsonData, &result); err != nil {
+		panic(err)
+	}
+	return result
+}
+
+// TestContext used for testing purposes only
+type TestContext struct {
+	CorrelationID string `json:"correlationId"`
+}
+
+// TestLogMessage used for testing purposes only
+type TestLogMessage[TCtx any] struct {
+	Level   string `json:"level"`
+	Msg     string `json:"msg"`
+	Time    string `json:"time"`
+	Context TCtx   `json:"context"`
+}
 
 func TestZerolog_LoggerFactory(t *testing.T) {
 	factory := zerologLoggerFactory{}
@@ -163,24 +197,61 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 	})
 }
 
-type logDataFieldFn[TVal any] func(key string, value TVal) MsgData
+func TestZerolog_LoggerLevel(t *testing.T) {
+	var output bytes.Buffer
+	outputWriter := bufio.NewWriter(&output)
 
-func castLotDataFieldFn[TVal any](fn logDataFieldFn[TVal]) logDataFieldFn[any] {
-	return func(key string, value any) MsgData {
-		return fn(key, value.(TVal))
-	}
-}
+	ctx := RootContext(
+		NewRootContextParams().
+			WithLogLevel(LogLevelTraceValue).
+			WithOutput(outputWriter).
+			WithCorrelationID(uuid.Must(uuid.NewV4()).String()),
+	)
+	log := Log(ctx)
 
-func jsonify(data any) any {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		panic(err)
+	type testCase struct {
+		log       LogLevelEvent
+		wantLevel string
 	}
-	var result any
-	if err := json.Unmarshal(jsonData, &result); err != nil {
-		panic(err)
+
+	tests := []testCase{
+		{log: log.Error(), wantLevel: "error"},
+		{log: log.Warn(), wantLevel: "warn"},
+		{log: log.Info(), wantLevel: "info"},
+		{log: log.Debug(), wantLevel: "debug"},
+		{log: log.Trace(), wantLevel: "trace"},
 	}
-	return result
+
+	for _, tt := range tests {
+		t.Run(tt.wantLevel, func(t *testing.T) {
+			msg := fake.Lorem().Sentence(3)
+
+			for _, fn := range []func(){
+				func() {
+					tt.log.Msg(msg)
+				},
+				func() {
+					log.WithLevel(ParseLogLevel(tt.wantLevel)).Msg(msg)
+				},
+			} {
+				output.Reset()
+				fn()
+				outputWriter.Flush()
+
+				var logMessage TestLogMessage[TestContext]
+				assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
+
+				assert.Equal(t, TestLogMessage[TestContext]{
+					Level: tt.wantLevel,
+					Msg:   msg,
+					Time:  logMessage.Time,
+					Context: TestContext{
+						CorrelationID: logMessage.Context.CorrelationID,
+					},
+				}, logMessage)
+			}
+		})
+	}
 }
 
 func TestZerolog_LogData(t *testing.T) {
