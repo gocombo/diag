@@ -632,6 +632,15 @@ func TestZerolog_LogData(t *testing.T) {
 		}, gotData)
 	})
 
+	t.Run("WithData bad type", func(t *testing.T) {
+		assert.PanicsWithError(
+			t,
+			"zerologLogLevelEvent.WithData: data is not a *zerologLogData",
+			func() {
+				logger.Info().WithData(nil).Msg(fake.Lorem().Sentence(3))
+			})
+	})
+
 	t.Run("Dict with not a dict", func(t *testing.T) {
 		assert.PanicsWithError(
 			t,
