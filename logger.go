@@ -23,8 +23,20 @@ func (l LogLevel) String() string {
 // ParseLogLevel parses a string into a LogLevel
 // returns debug if the string is not a valid log level
 func ParseLogLevel(level string) (LogLevel, bool) {
-	// TODO: Should match and if not matched should return debug
-	return LogLevel(level), true
+	switch level {
+	case LogLevelTraceValue.String():
+		return LogLevelTraceValue, true
+	case LogLevelDebugValue.String():
+		return LogLevelDebugValue, true
+	case LogLevelInfoValue.String():
+		return LogLevelInfoValue, true
+	case LogLevelWarnValue.String():
+		return LogLevelWarnValue, true
+	case LogLevelErrorValue.String():
+		return LogLevelErrorValue, true
+	default:
+		return LogLevelDebugValue, false
+	}
 }
 
 // MsgData defines a standard interface for adding data to a log message

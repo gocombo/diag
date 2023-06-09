@@ -27,4 +27,23 @@ func TestParseLogLevel(t *testing.T) {
 			})
 		}
 	})
+	t.Run("invalid", func(t *testing.T) {
+		tests := []string{
+			"TRACE",
+			"DEBUG",
+			"INFO",
+			"WARN",
+			"ERROR",
+			"invalid",
+			fake.Lorem().Word(),
+		}
+
+		for _, test := range tests {
+			t.Run(test, func(t *testing.T) {
+				level, ok := ParseLogLevel(test)
+				assert.False(t, ok)
+				assert.Equal(t, LogLevelDebugValue, level)
+			})
+		}
+	})
 }
