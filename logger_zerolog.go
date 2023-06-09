@@ -16,14 +16,6 @@ func init() {
 	zerolog.MessageFieldName = "msg"
 }
 
-func mustParseZerologLevel(level LogLevel) zerolog.Level {
-	zeroLogLevel, err := zerolog.ParseLevel(level.String())
-	if err != nil {
-		panic(fmt.Errorf("invalid log level %s: %w", level, err))
-	}
-	return zeroLogLevel
-}
-
 type zerologLoggerFactory struct{}
 
 func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
@@ -42,11 +34,16 @@ func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 		logger = zerolog.New(out)
 	}
 
+	zerologLevel, err := zerolog.ParseLevel(p.LogLevel.String())
+	if err != nil {
+		panic(fmt.Errorf("invalid log level %s: %w", p.LogLevel, err))
+	}
+
 	logger = logger.
 		With().
 		Timestamp().
 		Logger().
-		Level(mustParseZerologLevel(p.LogLevel))
+		Level(zerologLevel)
 
 	contextData := zerolog.Dict().
 		Str("correlationId", p.DiagData.CorrelationID)
@@ -81,7 +78,13 @@ func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) L
 		Logger()
 
 	if diagOpts.Level != nil {
-		childLogger = childLogger.Level(mustParseZerologLevel(*diagOpts.Level))
+		logLevel := diagOpts.Level.String()
+		zerologLevel, err := zerolog.ParseLevel(logLevel)
+		if err != nil {
+			childLogger.Warn().Err(err).Msgf("unexpected log level: %s", logLevel)
+		} else {
+			childLogger = childLogger.Level(zerologLevel)
+		}
 	}
 
 	return &zerologLevelLogger{

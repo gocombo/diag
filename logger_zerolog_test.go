@@ -102,6 +102,16 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 			assert.Contains(t, outputStr, msg)
 			assert.NotContains(t, outputStr, `"msg":"`+msg+`"`)
 		})
+
+		t.Run("panics if bad log level", func(t *testing.T) {
+			assert.Panics(t, func() {
+				factory.NewLogger(&RootContextParams{
+					LogLevel: LogLevel(fake.Lorem().Word()),
+					Out:      outputWriter,
+					Pretty:   true,
+				})
+			})
+		})
 	})
 
 	t.Run("ChildLogger", func(t *testing.T) {
@@ -173,6 +183,42 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 			childLogger.Info().Msg(msg)
 			outputWriter.Flush()
 			assert.Empty(t, output.String())
+		})
+		t.Run("ignore bad level", func(t *testing.T) {
+			var output bytes.Buffer
+			outputWriter := bufio.NewWriter(&output)
+
+			rootDiagParams := ContextDiagData{
+				CorrelationID: fake.UUID().V4(),
+				Entries:       map[string]string{},
+			}
+			rootLogger := factory.NewLogger(&RootContextParams{
+				LogLevel: LogLevelInfoValue,
+				Out:      outputWriter,
+				DiagData: rootDiagParams,
+			})
+
+			output.Reset()
+			badLevel := LogLevel(fake.Lorem().Word())
+			childLogger := factory.ChildLogger(rootLogger, DiagOpts{
+				Level:    &badLevel,
+				DiagData: rootDiagParams,
+			})
+			assert.IsType(t, &zerologLevelLogger{}, childLogger)
+			outputWriter.Flush()
+			assert.Contains(t, output.String(), fmt.Sprintf("unexpected log level: %s", badLevel))
+			assert.Contains(t, output.String(), `"level":"warn"`)
+
+			msg := fake.Lorem().Sentence(3)
+			output.Reset()
+			childLogger.Debug().Msg(msg)
+			outputWriter.Flush()
+			assert.Empty(t, output.String())
+
+			output.Reset()
+			childLogger.Info().Msg(msg)
+			outputWriter.Flush()
+			assert.Contains(t, output.String(), msg)
 		})
 		t.Run("validates if proper parent logger", func(t *testing.T) {
 			assert.Panics(t, func() {
