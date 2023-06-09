@@ -220,7 +220,8 @@ func TestZerolog_LoggerLevel(t *testing.T) {
 					tt.log.Msg(msg)
 				},
 				func() {
-					log.WithLevel(ParseLogLevel(tt.wantLevel)).Msg(msg)
+					level, _ := ParseLogLevel(tt.wantLevel)
+					log.WithLevel(level).Msg(msg)
 				},
 			} {
 				output.Reset()
