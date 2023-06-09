@@ -186,7 +186,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 	})
 }
 
-func TestZerolog_LoggerLevel(t *testing.T) {
+func TestZerolog_WithLevel(t *testing.T) {
 	var output bytes.Buffer
 	outputWriter := bufio.NewWriter(&output)
 
@@ -198,50 +198,52 @@ func TestZerolog_LoggerLevel(t *testing.T) {
 	)
 	log := Log(ctx)
 
-	type testCase struct {
-		log       LogLevelEvent
-		wantLevel string
-	}
+	t.Run("valid", func(t *testing.T) {
+		type testCase struct {
+			log       LogLevelEvent
+			wantLevel string
+		}
 
-	tests := []testCase{
-		{log: log.Error(), wantLevel: "error"},
-		{log: log.Warn(), wantLevel: "warn"},
-		{log: log.Info(), wantLevel: "info"},
-		{log: log.Debug(), wantLevel: "debug"},
-		{log: log.Trace(), wantLevel: "trace"},
-	}
+		tests := []testCase{
+			{log: log.Error(), wantLevel: "error"},
+			{log: log.Warn(), wantLevel: "warn"},
+			{log: log.Info(), wantLevel: "info"},
+			{log: log.Debug(), wantLevel: "debug"},
+			{log: log.Trace(), wantLevel: "trace"},
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.wantLevel, func(t *testing.T) {
-			msg := fake.Lorem().Sentence(3)
+		for _, tt := range tests {
+			t.Run(tt.wantLevel, func(t *testing.T) {
+				msg := fake.Lorem().Sentence(3)
 
-			for _, fn := range []func(){
-				func() {
-					tt.log.Msg(msg)
-				},
-				func() {
-					level, _ := ParseLogLevel(tt.wantLevel)
-					log.WithLevel(level).Msg(msg)
-				},
-			} {
-				output.Reset()
-				fn()
-				outputWriter.Flush()
-
-				var logMessage TestLogMessage[TestContext]
-				assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
-
-				assert.Equal(t, TestLogMessage[TestContext]{
-					Level: tt.wantLevel,
-					Msg:   msg,
-					Time:  logMessage.Time,
-					Context: TestContext{
-						CorrelationID: logMessage.Context.CorrelationID,
+				for _, fn := range []func(){
+					func() {
+						tt.log.Msg(msg)
 					},
-				}, logMessage)
-			}
-		})
-	}
+					func() {
+						level, _ := ParseLogLevel(tt.wantLevel)
+						log.WithLevel(level).Msg(msg)
+					},
+				} {
+					output.Reset()
+					fn()
+					outputWriter.Flush()
+
+					var logMessage TestLogMessage[TestContext]
+					assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
+
+					assert.Equal(t, TestLogMessage[TestContext]{
+						Level: tt.wantLevel,
+						Msg:   msg,
+						Time:  logMessage.Time,
+						Context: TestContext{
+							CorrelationID: logMessage.Context.CorrelationID,
+						},
+					}, logMessage)
+				}
+			})
+		}
+	})
 }
 
 func TestZerolog_LogData(t *testing.T) {
