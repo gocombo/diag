@@ -126,8 +126,13 @@ func (l *zerologLevelLogger) Trace() LogLevelEvent {
 }
 
 func (l *zerologLevelLogger) WithLevel(level LogLevel) LogLevelEvent {
-	// TODO: It should emit warn event instead of potential panic
-	return &zerologLogLevelEvent{Event: l.Logger.WithLevel(mustParseZerologLevel(level))}
+	zerologLevel, err := zerolog.ParseLevel(level.String())
+	if err != nil {
+		zerologLevel = zerolog.DebugLevel
+		l.Logger.Warn().Err(err).Msgf("Invalid log level: %s. Will use %s", level, zerologLevel)
+	}
+
+	return &zerologLogLevelEvent{Event: l.Logger.WithLevel(zerologLevel)}
 }
 
 func (l *zerologLevelLogger) NewData() MsgData {

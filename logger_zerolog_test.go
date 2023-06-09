@@ -244,6 +244,30 @@ func TestZerolog_WithLevel(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("invalid", func(t *testing.T) {
+		wantMsg := fake.Lorem().Sentence(3)
+		badLevelValue := fake.Lorem().Word()
+		output.Reset()
+		badLevelLogger := log.WithLevel(LogLevel(badLevelValue))
+		outputWriter.Flush()
+		var logMessage TestLogMessage[TestContext]
+		assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
+		assert.Equal(t, logMessage.Level, LogLevelWarnValue.String())
+		assert.Equal(t,
+			logMessage.Msg,
+			fmt.Sprintf("Invalid log level: %s. Will use %s",
+				badLevelValue,
+				LogLevelDebugValue,
+			))
+
+		output.Reset()
+		badLevelLogger.Msg(wantMsg)
+		outputWriter.Flush()
+		assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
+		assert.Equal(t, logMessage.Level, LogLevelDebugValue.String())
+		assert.Equal(t, logMessage.Msg, wantMsg)
+	})
 }
 
 func TestZerolog_LogData(t *testing.T) {
