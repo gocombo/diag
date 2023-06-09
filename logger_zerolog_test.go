@@ -614,6 +614,24 @@ func TestZerolog_LogData(t *testing.T) {
 		}
 	})
 
+	t.Run("WithDataFn", func(t *testing.T) {
+		output.Reset()
+		val1 := fake.Lorem().Word()
+		val2 := fake.Lorem().Word()
+		logger.Info().WithDataFn(func(data MsgData) {
+			data.Str("key1", val1)
+			data.Str("key2", val2)
+		}).Msg(fake.Lorem().Sentence(3))
+		outputWriter.Flush()
+		var logMessage map[string]interface{}
+		json.Unmarshal(output.Bytes(), &logMessage)
+		gotData := logMessage["data"].(map[string]interface{})
+		assert.Equal(t, map[string]interface{}{
+			"key1": val1,
+			"key2": val2,
+		}, gotData)
+	})
+
 	t.Run("Dict with not a dict", func(t *testing.T) {
 		assert.PanicsWithError(
 			t,
