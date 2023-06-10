@@ -15,7 +15,7 @@ func NewHttpTraceMiddleware(rootCtx context.Context) func(http.Handler) http.Han
 			if correlationID == "" {
 				correlationID = uuid.Must(uuid.NewV4()).String()
 			}
-			reqCtx := diag.ForkContext(req.Context(), diag.WithCorrelationID(correlationID))
+			reqCtx := diag.DiagifyContext(req.Context(), rootCtx, diag.WithCorrelationID(correlationID))
 			next.ServeHTTP(w, req.WithContext(reqCtx))
 		})
 	}
