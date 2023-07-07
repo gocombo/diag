@@ -35,4 +35,30 @@ func TestHttpTraceMiddleware(t *testing.T) {
 		}
 		assert.Equal(t, wantCorrelationId, gotDiagData.CorrelationID)
 	})
+	t.Run("setup correlationId from uuidFn", func(t *testing.T) {
+		wantCorrelationId := fake.UUID().V4()
+		req := httptest.NewRequest("GET", "/something", http.NoBody)
+		res := httptest.NewRecorder()
+
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			diagData := diag.DiagData(r.Context())
+			if err := json.NewEncoder(w).Encode(diagData); err != nil {
+				panic(err)
+			}
+		})
+		rootCtx := diag.RootContext(diag.NewRootContextParams())
+		wrapped := BuildHandler(h, NewHttpTraceMiddleware(rootCtx, func(opts *httpTraceMiddlewareOpts) {
+			opts.uuidFn = func() string {
+				return wantCorrelationId
+			}
+		}))
+		wrapped.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+		var gotDiagData diag.ContextDiagData
+		if err := json.NewDecoder(res.Body).Decode(&gotDiagData); !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, wantCorrelationId, gotDiagData.CorrelationID)
+	})
 }
