@@ -5,8 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/jaswdr/faker"
 	"github.com/stretchr/testify/assert"
 )
+
+var fake = faker.New()
 
 func TestBuildHandler(t *testing.T) {
 	t.Run("wrap handler with middleware", func(t *testing.T) {
