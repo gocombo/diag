@@ -2,7 +2,6 @@ package server
 
 import (
 	"math"
-	"net"
 	"net/http"
 	"runtime"
 	"time"
@@ -28,32 +27,26 @@ func runtimeMemMb() float64 {
 
 // WithHTTPLog log web transaction, it should be placed last in the middleware chain, to measure the latency of route handler logic
 func NewHttpLogMiddleware() func(http.Handler) http.Handler {
+
+	obfuscatedHeaders := []string{
+		"Authorization",
+		"Proxy-Authorization",
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			log := diag.Log(req.Context())
 
 			path := req.URL.Path
-
-			ip, port, err := net.SplitHostPort(req.RemoteAddr)
-			if err != nil {
-				log.Warn().WithError(err).Msgf("Failed to parse remote addr: %q", req.RemoteAddr)
-				ip = req.RemoteAddr
-			}
-
 			method := req.Method
 
 			log.Info().
 				WithDataFn(func(data diag.MsgData) {
 					data.
 						Str("method", method).
-						Str("host", req.Host).
 						Str("url", req.URL.RequestURI()).
-						Str("path", req.URL.Path).
-						Str("userAgent", req.UserAgent()).
-						// Str("headers",       flattenHeaders(req.Header)).
-						// Str("query",         flattenQuery(req.URL.Query())).
-						Str("remoteAddress", ip).
-						Str("remotePort", port).
+						Interface("headers", flattenAndObfuscate(req.Header, obfuscatedHeaders)).
+						Interface("query", flattenAndObfuscate(req.URL.Query(), nil)).
 						Float64("memoryUsageMb", runtimeMemMb())
 				}).
 				Msgf("BEGIN REQ: %s %s", method, path)

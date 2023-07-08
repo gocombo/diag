@@ -37,15 +37,15 @@ func TestHttpLogMiddleware(t *testing.T) {
 		outputWriter.Flush()
 		outputLines := strings.Split(strings.Trim(output.String(), "\n"), "\n")
 		assert.Equal(t, 2, len(outputLines))
+
 		var reqStart map[string]interface{}
 		if err := json.Unmarshal([]byte(outputLines[0]), &reqStart); !assert.NoError(t, err) {
 			return
 		}
 		data := reqStart["data"].(map[string]interface{})
 		assert.Equal(t, method, data["method"])
-		assert.Equal(t, "example.com", data["host"])
 		assert.Equal(t, path, data["url"])
-		assert.Equal(t, path, data["path"])
+		assert.NotEmpty(t, data["memoryUsageMb"])
 
 		assert.Equal(t,
 			fmt.Sprintf("BEGIN REQ: %s %s", method, path),
