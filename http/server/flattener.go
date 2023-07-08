@@ -7,6 +7,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// flattenAndObfuscate takes a map of string slices and flattens them into a map of strings.
+// If obfuscatedKeys is not empty, the values of those keys will be obfuscated.
+// The obfuscatedKeys is a slice. It usually performs better than a map on a small number of keys.
 func flattenAndObfuscate(values map[string][]string, obfuscatedKeys []string) map[string]string {
 	flattened := make(map[string]string, len(values))
 	hasObfuscatedKeys := len(obfuscatedKeys) > 0

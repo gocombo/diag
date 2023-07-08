@@ -109,8 +109,11 @@ func Benchmark_flattenAndObfuscate(b *testing.B) {
 		"key4": {"val2"},
 		"key5": {"val2"},
 	}
-	for i := 0; i < b.N; i++ {
-		keys := []string{"key2", "key4"}
-		flattenAndObfuscate(values, keys)
-	}
+	keys := []string{"key2", "key4"}
+
+	b.Run("slices as keys", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			flattenAndObfuscate(values, keys)
+		}
+	})
 }
