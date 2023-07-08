@@ -100,3 +100,17 @@ func Test_flattenAndObfuscate(t *testing.T) {
 		})
 	}
 }
+
+func Benchmark_flattenAndObfuscate(b *testing.B) {
+	values := map[string][]string{
+		"key1": {"val1"},
+		"key2": {"val2"},
+		"key3": {"val2"},
+		"key4": {"val2"},
+		"key5": {"val2"},
+	}
+	for i := 0; i < b.N; i++ {
+		keys := []string{"key2", "key4"}
+		flattenAndObfuscate(values, keys)
+	}
+}
