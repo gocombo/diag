@@ -8,6 +8,7 @@ require (
 	github.com/jaswdr/faker v1.17.0
 	github.com/rs/zerolog v1.29.1
 	github.com/stretchr/testify v1.8.3
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 )
 
 require (
