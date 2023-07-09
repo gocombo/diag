@@ -25,14 +25,23 @@ func TestHttpLogMiddleware(t *testing.T) {
 		method := fake.Internet().HTTPMethod()
 		path := "/" + fake.Internet().Slug()
 		req := httptest.NewRequest(method, path, http.NoBody).WithContext(rootCtx)
+		req.Header.Add("X-Test-Header-1", fake.Internet().Slug())
+		req.Header.Add("X-Test-Header", fake.Internet().Slug())
+		query := req.URL.Query()
+		query.Add("test", fake.Internet().Slug())
+		query.Add("test2", fake.Internet().Slug())
+		req.URL.RawQuery = query.Encode()
 		res := httptest.NewRecorder()
 
+		var wantReqHeaders http.Header
+		wantStatus := fake.IntBetween(200, 500)
 		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
+			wantReqHeaders = r.Header
+			w.WriteHeader(wantStatus)
 		})
 		wrapped := BuildHandler(h, NewHttpLogMiddleware())
 		wrapped.ServeHTTP(res, req)
-		assert.Equal(t, http.StatusOK, res.Code)
+		assert.Equal(t, wantStatus, res.Code)
 
 		outputWriter.Flush()
 		outputLines := strings.Split(strings.Trim(output.String(), "\n"), "\n")
@@ -44,7 +53,15 @@ func TestHttpLogMiddleware(t *testing.T) {
 		}
 		data := reqStart["data"].(map[string]interface{})
 		assert.Equal(t, method, data["method"])
-		assert.Equal(t, path, data["url"])
+		assert.Equal(t, req.URL.Path+"?"+req.URL.RawQuery, data["url"])
+		gotHeaders := data["headers"].(map[string]interface{})
+		for k, v := range flattenAndObfuscate(wantReqHeaders, nil) {
+			assert.Equal(t, v, gotHeaders[k])
+		}
+		gotQuery := data["query"].(map[string]interface{})
+		for k, v := range flattenAndObfuscate(query, nil) {
+			assert.Equal(t, v, gotQuery[k])
+		}
 		assert.NotEmpty(t, data["memoryUsageMb"])
 
 		assert.Equal(t,
