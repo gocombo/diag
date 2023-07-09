@@ -29,8 +29,8 @@ func runtimeMemMb() float64 {
 func NewHttpLogMiddleware() func(http.Handler) http.Handler {
 
 	obfuscatedHeaders := []string{
-		"Authorization",
-		"Proxy-Authorization",
+		"authorization",
+		"proxy-authorization",
 	}
 
 	return func(next http.Handler) http.Handler {
