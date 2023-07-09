@@ -22,9 +22,11 @@ func TestHttpLogMiddleware(t *testing.T) {
 		rootCtx := diag.RootContext(
 			diag.NewRootContextParams().WithOutput(outputWriter),
 		)
+		userAgent := fake.UserAgent().UserAgent()
 		method := fake.Internet().HTTPMethod()
 		path := "/" + fake.Internet().Slug()
 		req := httptest.NewRequest(method, path, http.NoBody).WithContext(rootCtx)
+		req.Header.Add("User-Agent", userAgent)
 		req.Header.Add("X-Test-Header-1", fake.Internet().Slug())
 		req.Header.Add("X-Test-Header", fake.Internet().Slug())
 		query := req.URL.Query()
@@ -35,8 +37,16 @@ func TestHttpLogMiddleware(t *testing.T) {
 
 		var wantReqHeaders http.Header
 		wantStatus := fake.IntBetween(200, 500)
+		wantResHeaders := map[string]string{
+			"X-Test-Header-1": fake.Internet().Slug(),
+			"X-Test-Header-2": fake.Internet().Slug(),
+			"X-Test-Header-3": fake.Internet().Slug(),
+		}
 		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			wantReqHeaders = r.Header
+			for k, v := range wantResHeaders {
+				w.Header().Set(k, v)
+			}
 			w.WriteHeader(wantStatus)
 		})
 		wrapped := BuildHandler(h, NewHttpLogMiddleware())
@@ -51,22 +61,42 @@ func TestHttpLogMiddleware(t *testing.T) {
 		if err := json.Unmarshal([]byte(outputLines[0]), &reqStart); !assert.NoError(t, err) {
 			return
 		}
-		data := reqStart["data"].(map[string]interface{})
-		assert.Equal(t, method, data["method"])
-		assert.Equal(t, req.URL.Path+"?"+req.URL.RawQuery, data["url"])
-		gotHeaders := data["headers"].(map[string]interface{})
+		startData := reqStart["data"].(map[string]interface{})
+		assert.Equal(t, method, startData["method"])
+		assert.Equal(t, req.URL.Path+"?"+req.URL.RawQuery, startData["url"])
+		gotStartHeaders := startData["headers"].(map[string]interface{})
 		for k, v := range flattenAndObfuscate(wantReqHeaders, nil) {
-			assert.Equal(t, v, gotHeaders[k])
+			assert.Equal(t, v, gotStartHeaders[k])
 		}
-		gotQuery := data["query"].(map[string]interface{})
+		gotQuery := startData["query"].(map[string]interface{})
 		for k, v := range flattenAndObfuscate(query, nil) {
 			assert.Equal(t, v, gotQuery[k])
 		}
-		assert.NotEmpty(t, data["memoryUsageMb"])
+		assert.NotEmpty(t, startData["memoryUsageMb"])
 
 		assert.Equal(t,
 			fmt.Sprintf("BEGIN REQ: %s %s", method, path),
 			reqStart["msg"],
+		)
+
+		var reqEnd map[string]interface{}
+		if err := json.Unmarshal([]byte(outputLines[1]), &reqEnd); !assert.NoError(t, err) {
+			return
+		}
+
+		endData := reqEnd["data"].(map[string]interface{})
+		assert.Equal(t, float64(wantStatus), endData["statusCode"])
+		assert.NotZero(t, endData["durationSec"])
+		assert.NotZero(t, endData["memoryUsageMb"])
+		assert.Equal(t, userAgent, endData["userAgent"])
+		gotEndHeaders := endData["headers"].(map[string]interface{})
+		for k, v := range wantResHeaders {
+			assert.Equal(t, v, gotEndHeaders[k])
+		}
+
+		assert.Equal(t,
+			fmt.Sprintf("END REQ: %v - %s", wantStatus, path),
+			reqEnd["msg"],
 		)
 	})
 }

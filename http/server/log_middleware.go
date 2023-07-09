@@ -72,8 +72,8 @@ func NewHttpLogMiddleware() func(http.Handler) http.Handler {
 				log.Info().
 					WithDataFn(func(data diag.MsgData) {
 						data.Int("statusCode", status)
-						// data.Str("headers", flattenHeaders(w.Header()))
-						data.Float64("duration", stop.Sub(start).Seconds())
+						data.Interface("headers", flattenAndObfuscate(w.Header(), nil))
+						data.Float64("durationSec", stop.Sub(start).Seconds())
 						data.Float64("memoryUsageMb", runtimeMemMb())
 						data.Str("userAgent", req.UserAgent())
 					}).
