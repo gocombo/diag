@@ -53,7 +53,6 @@ func NewTransport(target http.RoundTripper) http.RoundTripper {
 			var resData []byte
 			if res.Body != nil {
 				defer res.Body.Close()
-				// Read and discard body to avoid memory leaks
 				resData, err = io.ReadAll(res.Body)
 				if err != nil {
 					log.Warn().WithError(err).Msg("Failed to read error body")
