@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gocombo/diag"
+	"github.com/gocombo/diag/http/internal"
 )
 
 type responseWrapper struct {
@@ -28,11 +29,6 @@ func runtimeMemMb() float64 {
 // WithHTTPLog log web transaction, it should be placed last in the middleware chain, to measure the latency of route handler logic
 func NewHttpLogMiddleware() func(http.Handler) http.Handler {
 
-	obfuscatedHeaders := []string{
-		"authorization",
-		"proxy-authorization",
-	}
-
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			log := diag.Log(req.Context())
@@ -45,8 +41,8 @@ func NewHttpLogMiddleware() func(http.Handler) http.Handler {
 					data.
 						Str("method", method).
 						Str("url", req.URL.RequestURI()).
-						Interface("headers", flattenAndObfuscate(req.Header, obfuscatedHeaders)).
-						Interface("query", flattenAndObfuscate(req.URL.Query(), nil)).
+						Interface("headers", internal.FlattenAndObfuscate(req.Header, internal.DefaultObfuscatedHeaders)).
+						Interface("query", internal.FlattenAndObfuscate(req.URL.Query(), nil)).
 						Float64("memoryUsageMb", runtimeMemMb())
 				}).
 				Msgf("BEGIN REQ: %s %s", method, path)
@@ -72,7 +68,7 @@ func NewHttpLogMiddleware() func(http.Handler) http.Handler {
 				log.Info().
 					WithDataFn(func(data diag.MsgData) {
 						data.Int("statusCode", status)
-						data.Interface("headers", flattenAndObfuscate(w.Header(), nil))
+						data.Interface("headers", internal.FlattenAndObfuscate(w.Header(), nil))
 						data.Float64("durationSec", stop.Sub(start).Seconds())
 						data.Float64("memoryUsageMb", runtimeMemMb())
 						data.Str("userAgent", req.UserAgent())

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/gocombo/diag"
+	"github.com/gocombo/diag/http/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,11 +66,11 @@ func TestHttpLogMiddleware(t *testing.T) {
 		assert.Equal(t, method, startData["method"])
 		assert.Equal(t, req.URL.Path+"?"+req.URL.RawQuery, startData["url"])
 		gotStartHeaders := startData["headers"].(map[string]interface{})
-		for k, v := range flattenAndObfuscate(wantReqHeaders, nil) {
+		for k, v := range internal.FlattenAndObfuscate(wantReqHeaders, nil) {
 			assert.Equal(t, v, gotStartHeaders[k])
 		}
 		gotQuery := startData["query"].(map[string]interface{})
-		for k, v := range flattenAndObfuscate(query, nil) {
+		for k, v := range internal.FlattenAndObfuscate(query, nil) {
 			assert.Equal(t, v, gotQuery[k])
 		}
 		assert.NotEmpty(t, startData["memoryUsageMb"])

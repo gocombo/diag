@@ -1,11 +1,14 @@
-package server
+package internal
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/jaswdr/faker"
 	"github.com/stretchr/testify/assert"
 )
+
+var fake = faker.New()
 
 func Test_flattenAndObfuscate(t *testing.T) {
 	type args struct {
@@ -95,7 +98,7 @@ func Test_flattenAndObfuscate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt()
 		t.Run(tt.name, func(t *testing.T) {
-			got := flattenAndObfuscate(tt.args.values, tt.args.obfuscate)
+			got := FlattenAndObfuscate(tt.args.values, tt.args.obfuscate)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -113,7 +116,7 @@ func Benchmark_flattenAndObfuscate(b *testing.B) {
 
 	b.Run("slices as keys", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			flattenAndObfuscate(values, keys)
+			FlattenAndObfuscate(values, keys)
 		}
 	})
 }
