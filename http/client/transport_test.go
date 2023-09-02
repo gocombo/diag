@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/gocombo/diag"
+	"github.com/gocombo/diag/http/internal"
 	"github.com/gocombo/diag/http/internal/testing/httptst"
 	"github.com/gocombo/diag/http/internal/testing/testrand"
 	"github.com/stretchr/testify/assert"
@@ -64,5 +66,31 @@ func TestTransport(t *testing.T) {
 			return
 		}
 		assert.Equal(t, 2, len(logLines))
+
+		reqStart := logLines[0]
+		assert.Equal(t,
+			fmt.Sprintf("START SENDING REQ: %v %v", strings.ToUpper(req.Method), req.URL),
+			reqStart["msg"],
+		)
+		reqStartData := reqStart["data"].(map[string]interface{})
+		assert.Equal(t, req.Method, reqStartData["method"])
+		assert.Equal(t, req.URL.Path+"?"+req.URL.RawQuery, reqStartData["url"])
+		gotStartHeaders := reqStartData["headers"].(map[string]interface{})
+		for k, v := range internal.FlattenAndObfuscate(req.Header, internal.DefaultObfuscatedHeaders) {
+			assert.Equal(t, v, gotStartHeaders[k])
+		}
+
+		reqEnd := logLines[1]
+		assert.Equal(t,
+			fmt.Sprintf("COMPLETE SENDING REQ: %d - %v", res.StatusCode, res.Request.URL.String()),
+			reqEnd["msg"],
+		)
+		reqEndData := reqEnd["data"].(map[string]interface{})
+		assert.Equal(t, float64(res.StatusCode), reqEndData["statusCode"])
+		assert.NotZero(t, reqEndData["durationSec"])
+		gotEndHeaders := reqEndData["headers"].(map[string]interface{})
+		for k, v := range internal.FlattenAndObfuscate(res.Header, nil) {
+			assert.Equal(t, v, gotEndHeaders[k])
+		}
 	})
 }

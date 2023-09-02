@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -22,6 +20,9 @@ func writeLogEndMessage(
 	durationSec float64,
 	res *http.Response,
 ) {
+	// TODO: Use warn for 4xx and 5xx
+	// if non 200 response then log body
+
 	log.Info().
 		WithData(
 			log.NewData().
@@ -47,21 +48,6 @@ func NewTransport(target http.RoundTripper) http.RoundTripper {
 		res, err := target.RoundTrip(req)
 		reqDuration := time.Since(startedAt).Seconds()
 		writeLogEndMessage(log, reqDuration, res)
-
-		// We let consumer decide redirects handling
-		if res.StatusCode > 399 {
-			var resData []byte
-			if res.Body != nil {
-				defer res.Body.Close()
-				resData, err = io.ReadAll(res.Body)
-				if err != nil {
-					log.Warn().WithError(err).Msg("Failed to read error body")
-				}
-			}
-
-			return nil, fmt.Errorf("failed to send request: %v - %s", res.Status, resData)
-		}
-
 		return res, err
 	})
 }
