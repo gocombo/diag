@@ -28,6 +28,7 @@ type RootContextParams struct {
 	LogLevel      LogLevel
 	LoggerFactory LoggerFactory
 	DiagData      ContextDiagData
+	cloudPlatformAdapter
 }
 
 // ContextDiagData is a structure that can be used to hold various
@@ -96,6 +97,12 @@ func (c *RootContextParams) WithLogLevel(logLevel LogLevel) *RootContextParams {
 // WithLoggerFactory allows using a custom logger factory with alternative implementation
 func (c *RootContextParams) WithLoggerFactory(factory LoggerFactory) *RootContextParams {
 	c.LoggerFactory = factory
+	return c
+}
+
+// WithGCPCloudAdapter will add GCP specific log entries such as severity
+func (c *RootContextParams) WithGCPCloudAdapter() *RootContextParams {
+	c.cloudPlatformAdapter = gcpAdapter{}
 	return c
 }
 
