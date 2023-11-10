@@ -1,16 +1,16 @@
 package diag
 
-type logDataAppender interface {
-	Str(key string, value string)
+type logFieldAppender interface {
+	Str(key string, val string)
 }
 
 type cloudPlatformAdapter interface {
-	appendLevelData(level LogLevel, target logDataAppender)
+	appendLevelData(level LogLevel, target logFieldAppender)
 }
 
 type gcpAdapter struct{}
 
-func (gcpAdapter) appendLevelData(level LogLevel, target logDataAppender) {
+func (gcpAdapter) appendLevelData(level LogLevel, target logFieldAppender) {
 }
 
 var _ cloudPlatformAdapter = gcpAdapter{}

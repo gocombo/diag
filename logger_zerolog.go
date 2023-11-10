@@ -18,7 +18,7 @@ func init() {
 
 type zerologLoggerFactory struct{}
 
-func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
+func (zerologLoggerFactory) NewLogger(p *rootContextParams) LevelLogger {
 	var logger zerolog.Logger
 
 	var out io.Writer = os.Stderr
@@ -56,7 +56,8 @@ func (zerologLoggerFactory) NewLogger(p *RootContextParams) LevelLogger {
 		Logger()
 
 	return &zerologLevelLogger{
-		logger,
+		Logger:               logger,
+		cloudPlatformAdapter: p.cloudPlatformAdapter,
 	}
 }
 
@@ -88,7 +89,8 @@ func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) L
 	}
 
 	return &zerologLevelLogger{
-		Logger: childLogger,
+		Logger:               childLogger,
+		cloudPlatformAdapter: zerologLogger.cloudPlatformAdapter,
 	}
 }
 
@@ -96,10 +98,25 @@ var _ LoggerFactory = zerologLoggerFactory{}
 
 type zerologLevelLogger struct {
 	zerolog.Logger
+	cloudPlatformAdapter
+}
+
+func (l *zerologLevelLogger) appendCloudPlatformLevelData(level LogLevel, evt *zerolog.Event) {
+	if l.cloudPlatformAdapter != nil {
+		l.cloudPlatformAdapter.appendLevelData(level, zerologLogFieldAppender{Event: evt})
+	}
 }
 
 type zerologLogLevelEvent struct {
 	*zerolog.Event
+}
+
+type zerologLogFieldAppender struct {
+	*zerolog.Event
+}
+
+func (l zerologLogFieldAppender) Str(key, val string) {
+	l.Event.Str(key, val)
 }
 
 type zerologLogData struct {
@@ -109,23 +126,33 @@ type zerologLogData struct {
 var _ MsgData = &zerologLogData{}
 
 func (l *zerologLevelLogger) Error() LogLevelEvent {
-	return zerologLogLevelEvent{Event: l.Logger.Error()}
+	evt := l.Logger.Error()
+	l.appendCloudPlatformLevelData(LogLevelErrorValue, evt)
+	return zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Warn() LogLevelEvent {
-	return &zerologLogLevelEvent{Event: l.Logger.Warn()}
+	evt := l.Logger.Warn()
+	l.appendCloudPlatformLevelData(LogLevelWarnValue, evt)
+	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Info() LogLevelEvent {
-	return &zerologLogLevelEvent{Event: l.Logger.Info()}
+	evt := l.Logger.Info()
+	l.appendCloudPlatformLevelData(LogLevelInfoValue, evt)
+	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Debug() LogLevelEvent {
-	return &zerologLogLevelEvent{Event: l.Logger.Debug()}
+	evt := l.Logger.Debug()
+	l.appendCloudPlatformLevelData(LogLevelDebugValue, evt)
+	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Trace() LogLevelEvent {
-	return &zerologLogLevelEvent{Event: l.Logger.Trace()}
+	evt := l.Logger.Trace()
+	l.appendCloudPlatformLevelData(LogLevelTraceValue, evt)
+	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) WithLevel(level LogLevel) LogLevelEvent {
@@ -135,7 +162,9 @@ func (l *zerologLevelLogger) WithLevel(level LogLevel) LogLevelEvent {
 		l.Logger.Warn().Err(err).Msgf("Invalid log level: %s. Will use %s", level, zerologLevel)
 	}
 
-	return &zerologLogLevelEvent{Event: l.Logger.WithLevel(zerologLevel)}
+	evt := l.Logger.WithLevel(zerologLevel)
+	l.appendCloudPlatformLevelData(level, evt)
+	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) NewData() MsgData {
