@@ -23,4 +23,4 @@ jobs:
         make tools
 
     - name: Test
-      run: make test-cover
+      run: make test
