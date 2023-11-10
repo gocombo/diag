@@ -36,6 +36,7 @@ func unmarshalLogLines(
 }
 
 func TestTransport(t *testing.T) {
+	fake := testrand.Faker()
 
 	t.Run("should log start and end of request", func(t *testing.T) {
 		var output bytes.Buffer
@@ -92,5 +93,41 @@ func TestTransport(t *testing.T) {
 		for k, v := range internal.FlattenAndObfuscate(res.Header, nil) {
 			assert.Equal(t, v, gotEndHeaders[k])
 		}
+	})
+	t.Run("should log non success responses with warn", func(t *testing.T) {
+		var output bytes.Buffer
+		outputWriter := bufio.NewWriter(&output)
+
+		rootCtx := diag.RootContext(
+			diag.NewRootContextParams().WithOutput(outputWriter),
+		)
+
+		req := httptst.RandomHttpReq(testrand.Faker(), rootCtx)
+		wantRes := &http.Response{
+			StatusCode: fake.IntBetween(400, 599),
+			Body:       http.NoBody,
+			Request:    req,
+		}
+		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
+			return wantRes, nil
+		}))
+		res, _ := transport.RoundTrip(req)
+		defer res.Body.Close()
+
+		logLines, ok := unmarshalLogLines(t, outputWriter, &output)
+		if !ok {
+			return
+		}
+		assert.Equal(t, 2, len(logLines))
+
+		reqStart := logLines[0]
+		assert.Equal(t,
+			fmt.Sprintf("START SENDING REQ: %v %v", strings.ToUpper(req.Method), req.URL),
+			reqStart["msg"],
+		)
+		assert.Equal(t, "info", reqStart["level"])
+
+		reqEnd := logLines[1]
+		assert.Equal(t, "warn", reqEnd["level"])
 	})
 }

@@ -23,6 +23,17 @@ func castLotDataFieldFn[TVal any](fn logDataFieldFn[TVal]) logDataFieldFn[any] {
 	}
 }
 
+type mockCloudPlatformAdapter struct {
+	mockLogKey              string
+	mockLogLevelValuePrefix string
+}
+
+func (m mockCloudPlatformAdapter) appendLevelData(level LogLevel, target logFieldAppender) {
+	target.Str(m.mockLogKey, m.mockLogLevelValuePrefix+level.String())
+}
+
+var _ cloudPlatformAdapter = mockCloudPlatformAdapter{}
+
 func jsonify(data any) any {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -59,7 +70,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 				"key1": fake.Lorem().Word(),
 				"key2": fake.Lorem().Word(),
 			}
-			logger := factory.NewLogger(&RootContextParams{
+			logger := factory.NewLogger(&rootContextParams{
 				DiagData: ContextDiagData{
 					CorrelationID: wantCorrelationID,
 					Entries:       wantEntries,
@@ -89,7 +100,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 		})
 
 		t.Run("returns a new logger with pretty", func(t *testing.T) {
-			logger := factory.NewLogger(&RootContextParams{
+			logger := factory.NewLogger(&rootContextParams{
 				LogLevel: LogLevelInfoValue,
 				Out:      outputWriter,
 				Pretty:   true,
@@ -105,7 +116,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 
 		t.Run("panics if bad log level", func(t *testing.T) {
 			assert.Panics(t, func() {
-				factory.NewLogger(&RootContextParams{
+				factory.NewLogger(&rootContextParams{
 					LogLevel: LogLevel(fake.Lorem().Word()),
 					Out:      outputWriter,
 					Pretty:   true,
@@ -120,7 +131,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 				CorrelationID: fake.UUID().V4(),
 				Entries:       map[string]string{},
 			}
-			rootLogger := factory.NewLogger(&RootContextParams{
+			rootLogger := factory.NewLogger(&rootContextParams{
 				LogLevel: LogLevelTraceValue,
 				Out:      outputWriter,
 				DiagData: rootDiagParams,
@@ -164,7 +175,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 				CorrelationID: fake.UUID().V4(),
 				Entries:       map[string]string{},
 			}
-			rootLogger := factory.NewLogger(&RootContextParams{
+			rootLogger := factory.NewLogger(&rootContextParams{
 				LogLevel: LogLevelTraceValue,
 				Out:      outputWriter,
 				DiagData: rootDiagParams,
@@ -192,7 +203,7 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 				CorrelationID: fake.UUID().V4(),
 				Entries:       map[string]string{},
 			}
-			rootLogger := factory.NewLogger(&RootContextParams{
+			rootLogger := factory.NewLogger(&rootContextParams{
 				LogLevel: LogLevelInfoValue,
 				Out:      outputWriter,
 				DiagData: rootDiagParams,
@@ -287,6 +298,61 @@ func TestZerolog_WithLevel(t *testing.T) {
 		}
 	})
 
+	t.Run("with cloud platform adapter", func(t *testing.T) {
+		type testCase struct {
+			log       LogLevelEvent
+			wantLevel string
+		}
+
+		params := NewRootContextParams().
+			WithLogLevel(LogLevelTraceValue).
+			WithOutput(outputWriter).
+			WithCorrelationID(uuid.Must(uuid.NewV4()).String())
+		wantLogKey := "mock-key-" + fake.UUID().V4()
+		mockLogLevelValuePrefix := "mock-level-"
+		params.cloudPlatformAdapter = mockCloudPlatformAdapter{
+			mockLogKey:              wantLogKey,
+			mockLogLevelValuePrefix: mockLogLevelValuePrefix,
+		}
+		ctx := RootContext(
+			params,
+		)
+		log = Log(ctx)
+
+		tests := []testCase{
+			{log: log.Error(), wantLevel: "error"},
+			{log: log.Warn(), wantLevel: "warn"},
+			{log: log.Info(), wantLevel: "info"},
+			{log: log.Debug(), wantLevel: "debug"},
+			{log: log.Trace(), wantLevel: "trace"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.wantLevel, func(t *testing.T) {
+				msg := fake.Lorem().Sentence(3)
+
+				for _, fn := range []func(){
+					func() {
+						tt.log.Msg(msg)
+					},
+					func() {
+						level, _ := ParseLogLevel(tt.wantLevel)
+						log.WithLevel(level).Msg(msg)
+					},
+				} {
+					output.Reset()
+					fn()
+					outputWriter.Flush()
+
+					var logMessage map[string]interface{}
+					assert.NoError(t, json.Unmarshal(output.Bytes(), &logMessage))
+
+					assert.Equal(t, mockLogLevelValuePrefix+tt.wantLevel, logMessage[wantLogKey])
+				}
+			})
+		}
+	})
+
 	t.Run("invalid", func(t *testing.T) {
 		wantMsg := fake.Lorem().Sentence(3)
 		badLevelValue := fake.Lorem().Word()
@@ -316,7 +382,7 @@ func TestZerolog_LogData(t *testing.T) {
 	factory := zerologLoggerFactory{}
 	var output bytes.Buffer
 	outputWriter := bufio.NewWriter(&output)
-	logger := factory.NewLogger(&RootContextParams{
+	logger := factory.NewLogger(&rootContextParams{
 		Out: outputWriter, LogLevel: LogLevelDebugValue,
 	})
 

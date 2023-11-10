@@ -20,10 +20,14 @@ func writeLogEndMessage(
 	durationSec float64,
 	res *http.Response,
 ) {
-	// TODO: Use warn for 4xx and 5xx
-	// if non 200 response then log body
+	var levelLog diag.LogLevelEvent
+	if res.StatusCode >= 400 {
+		levelLog = log.Warn()
+	} else {
+		levelLog = log.Info()
+	}
 
-	log.Info().
+	levelLog.
 		WithData(
 			log.NewData().
 				Float64("durationSec", durationSec).

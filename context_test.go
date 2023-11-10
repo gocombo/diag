@@ -199,4 +199,8 @@ func TestContext_ForkContext(t *testing.T) {
 		assert.Nil(t, forkedCtx.Value(testContextKeyFoo))
 		assert.Nil(t, forkedCtx.Err())
 	})
+	t.Run("uses cloud adapters", func(t *testing.T) {
+		params := NewRootContextParams().WithGCPCloudAdapter()
+		assert.IsType(t, gcpAdapter{}, params.cloudPlatformAdapter)
+	})
 }
