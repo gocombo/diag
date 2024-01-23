@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -129,5 +130,42 @@ func TestTransport(t *testing.T) {
 
 		reqEnd := logLines[1]
 		assert.Equal(t, "warn", reqEnd["level"])
+	})
+	t.Run("should handle request errors", func(t *testing.T) {
+		var output bytes.Buffer
+		outputWriter := bufio.NewWriter(&output)
+
+		rootCtx := diag.RootContext(
+			diag.NewRootContextParams().WithOutput(outputWriter),
+		)
+
+		req := httptst.RandomHttpReq(testrand.Faker(), rootCtx)
+		wantErr := errors.New(fake.Lorem().Word())
+		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
+			return nil, wantErr
+		}))
+		_, err := transport.RoundTrip(req)
+		assert.Equal(t, wantErr, err)
+
+		logLines, ok := unmarshalLogLines(t, outputWriter, &output)
+		if !ok {
+			return
+		}
+		assert.Equal(t, 2, len(logLines))
+
+		reqStart := logLines[0]
+		assert.Equal(t,
+			fmt.Sprintf("START SENDING REQ: %v %v", strings.ToUpper(req.Method), req.URL),
+			reqStart["msg"],
+		)
+		assert.Equal(t, "info", reqStart["level"])
+
+		reqEnd := logLines[1]
+		assert.Equal(t,
+			fmt.Sprintf("COMPLETE SENDING REQ: 599 - %v", req.URL.String()),
+			reqEnd["msg"],
+		)
+		reqEndData := reqEnd["data"].(map[string]interface{})
+		assert.NotZero(t, reqEndData["durationSec"])
 	})
 }
