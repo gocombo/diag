@@ -18,22 +18,35 @@ func (fn roundTripperFn) RoundTrip(req *http.Request) (*http.Response, error) {
 func writeLogEndMessage(
 	log diag.LevelLogger,
 	durationSec float64,
+	req *http.Request,
 	res *http.Response,
+	err error,
 ) {
 	var levelLog diag.LogLevelEvent
-	if res.StatusCode >= 400 {
+	var resCode int
+	if res != nil {
+		resCode = res.StatusCode
+	} else {
+		// This is a special case where the request was never sent
+		// 599 is a closest unofficial code to indicate this
+		resCode = 599
+	}
+	if resCode >= 400 {
 		levelLog = log.Warn()
 	} else {
 		levelLog = log.Info()
 	}
 
+	logData := log.NewData().
+		Float64("durationSec", durationSec).
+		Int("statusCode", resCode)
+	if res != nil {
+		logData = logData.Interface("headers", internal.FlattenAndObfuscate(res.Header, internal.DefaultObfuscatedHeaders))
+	}
+
 	levelLog.
-		WithData(
-			log.NewData().
-				Float64("durationSec", durationSec).
-				Interface("headers", internal.FlattenAndObfuscate(res.Header, internal.DefaultObfuscatedHeaders)).
-				Int("statusCode", res.StatusCode),
-		).Msgf("COMPLETE SENDING REQ: %d - %v", res.StatusCode, res.Request.URL.String())
+		WithData(logData).
+		Msgf("COMPLETE SENDING REQ: %d - %v", resCode, req.URL.String())
 }
 
 // NewTransport returns a wrapped http.RoundTripper that will produce
@@ -51,7 +64,7 @@ func NewTransport(target http.RoundTripper) http.RoundTripper {
 		startedAt := time.Now()
 		res, err := target.RoundTrip(req)
 		reqDuration := time.Since(startedAt).Seconds()
-		writeLogEndMessage(log, reqDuration, res)
+		writeLogEndMessage(log, reqDuration, req, res, err)
 		return res, err
 	})
 }

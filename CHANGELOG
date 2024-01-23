@@ -1,3 +1,6 @@
+# v0.0.3
+* Fix transport to handle request errors
+
 # v0.0.2
 * Support GCP severity levels
 * Improve client logging
