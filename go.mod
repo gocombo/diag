@@ -6,9 +6,9 @@ require (
 	github.com/dave/jennifer v1.7.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jaswdr/faker v1.19.1
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.3
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
+	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 )
 
 require (
