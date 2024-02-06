@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gocombo/diag"
 	"github.com/gocombo/diag/http/internal"
@@ -54,6 +55,7 @@ func TestTransport(t *testing.T) {
 			Request:    req,
 		}
 		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
+			time.Sleep(20 * time.Millisecond)
 			return wantRes, nil
 		}))
 		res, err := transport.RoundTrip(req)
@@ -142,6 +144,7 @@ func TestTransport(t *testing.T) {
 		req := httptst.RandomHttpReq(testrand.Faker(), rootCtx)
 		wantErr := errors.New(fake.Lorem().Word())
 		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
+			time.Sleep(20 * time.Millisecond)
 			return nil, wantErr
 		}))
 		res, err := transport.RoundTrip(req)
