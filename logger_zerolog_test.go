@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"regexp"
 	"testing"
 	"time"
 
@@ -127,9 +128,18 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 
 	t.Run("ChildLogger", func(t *testing.T) {
 		t.Run("creates a derived logger", func(t *testing.T) {
+			rootEntry1 := fmt.Sprintf("root-entry1-%s", fake.Lorem().Word())
+			rootEntry2 := fmt.Sprintf("root-entry2-%s", fake.Lorem().Word())
+			rootOverriddenEntry1 := fmt.Sprintf("root-overridden-entry1-%s", fake.Lorem().Word())
+			rootOverriddenEntry2 := fmt.Sprintf("root-overridden-entry2-%s", fake.Lorem().Word())
 			rootDiagParams := ContextDiagData{
 				CorrelationID: fake.UUID().V4(),
-				Entries:       map[string]string{},
+				Entries: map[string]string{
+					"root-key1":            rootEntry1,
+					"root-key2":            rootEntry2,
+					"root-overridden-key1": rootOverriddenEntry1,
+					"root-overridden-key2": rootOverriddenEntry2,
+				},
 			}
 			rootLogger := factory.NewLogger(&rootContextParams{
 				LogLevel: LogLevelTraceValue,
@@ -139,8 +149,12 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 
 			nextCorrelationId := fake.UUID().V4()
 			wantChildEntries := map[string]string{
-				"ch-key1": fake.Lorem().Word(),
-				"ch-key2": fake.Lorem().Word(),
+				"ch-key1":              fake.Lorem().Word(),
+				"ch-key2":              fake.Lorem().Word(),
+				"root-key1":            rootEntry1,
+				"root-key2":            rootEntry2,
+				"root-overridden-key1": fake.Lorem().Word(),
+				"root-overridden-key2": fake.Lorem().Word(),
 			}
 			childLogger := factory.ChildLogger(rootLogger, DiagOpts{
 				DiagData: ContextDiagData{
@@ -155,15 +169,34 @@ func TestZerolog_LoggerFactory(t *testing.T) {
 			childLogger.Info().Msg(msg)
 			outputWriter.Flush()
 			var logMessage TestLogMessage[map[string]string]
+			assert.Len(t,
+				regexp.MustCompile("root-key1").FindAllIndex(output.Bytes(), -1),
+				1)
+			assert.Len(t,
+				regexp.MustCompile("root-key2").FindAllIndex(output.Bytes(), -1),
+				1)
+			assert.Len(t,
+				regexp.MustCompile("root-overridden-key1").FindAllIndex(output.Bytes(), -1),
+				1)
+			assert.Len(t,
+				regexp.MustCompile("root-overridden-key2").FindAllIndex(output.Bytes(), -1),
+				1)
+			assert.Len(t,
+				regexp.MustCompile("correlationId").FindAllIndex(output.Bytes(), -1),
+				1)
 			json.Unmarshal(output.Bytes(), &logMessage)
 			assert.Equal(t, TestLogMessage[map[string]string]{
 				Level: "info",
 				Msg:   msg,
 				Time:  logMessage.Time,
 				Context: map[string]string{
-					"correlationId": nextCorrelationId,
-					"ch-key1":       wantChildEntries["ch-key1"],
-					"ch-key2":       wantChildEntries["ch-key2"],
+					"correlationId":        nextCorrelationId,
+					"ch-key1":              wantChildEntries["ch-key1"],
+					"ch-key2":              wantChildEntries["ch-key2"],
+					"root-key1":            rootEntry1,
+					"root-key2":            rootEntry2,
+					"root-overridden-key1": wantChildEntries["root-overridden-key1"],
+					"root-overridden-key2": wantChildEntries["root-overridden-key2"],
 				},
 			}, logMessage)
 		})
