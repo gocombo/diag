@@ -144,7 +144,12 @@ func TestTransport(t *testing.T) {
 		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
 			return nil, wantErr
 		}))
-		_, err := transport.RoundTrip(req)
+		res, err := transport.RoundTrip(req)
+		defer func() {
+			if res != nil {
+				res.Body.Close()
+			}
+		}()
 		assert.Equal(t, wantErr, err)
 
 		logLines, ok := unmarshalLogLines(t, outputWriter, &output)

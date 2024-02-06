@@ -20,7 +20,6 @@ func writeLogEndMessage(
 	durationSec float64,
 	req *http.Request,
 	res *http.Response,
-	err error,
 ) {
 	var levelLog diag.LogLevelEvent
 	var resCode int
@@ -64,7 +63,7 @@ func NewTransport(target http.RoundTripper) http.RoundTripper {
 		startedAt := time.Now()
 		res, err := target.RoundTrip(req)
 		reqDuration := time.Since(startedAt).Seconds()
-		writeLogEndMessage(log, reqDuration, req, res, err)
+		writeLogEndMessage(log, reqDuration, req, res)
 		return res, err
 	})
 }

@@ -16,6 +16,17 @@ func init() {
 	zerolog.MessageFieldName = "msg"
 }
 
+func newZerologContextDataFunc(diagData ContextDiagData) func(*zerolog.Event) {
+	return func(e *zerolog.Event) {
+		contextData := zerolog.Dict().
+			Str("correlationId", diagData.CorrelationID)
+		for k, v := range diagData.Entries {
+			contextData = contextData.Str(k, v)
+		}
+		e.Dict("context", contextData)
+	}
+}
+
 type zerologLoggerFactory struct{}
 
 func (zerologLoggerFactory) NewLogger(p *rootContextParams) LevelLogger {
@@ -45,19 +56,10 @@ func (zerologLoggerFactory) NewLogger(p *rootContextParams) LevelLogger {
 		Logger().
 		Level(zerologLevel)
 
-	contextData := zerolog.Dict().
-		Str("correlationId", p.DiagData.CorrelationID)
-	for k, v := range p.DiagData.Entries {
-		contextData = contextData.Str(k, v)
-	}
-
-	logger = logger.With().
-		Dict("context", contextData).
-		Logger()
-
 	return &zerologLevelLogger{
 		Logger:               logger,
 		cloudPlatformAdapter: p.cloudPlatformAdapter,
+		ContextDiagDataFunc:  newZerologContextDataFunc(p.DiagData),
 	}
 }
 
@@ -68,15 +70,7 @@ func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) L
 	}
 
 	diagData := diagOpts.DiagData
-
-	contextData := zerolog.Dict().
-		Str("correlationId", diagData.CorrelationID)
-	for k, v := range diagData.Entries {
-		contextData = contextData.Str(k, v)
-	}
-	childLogger := zerologLogger.Logger.With().
-		Dict("context", contextData).
-		Logger()
+	childLogger := zerologLogger.Logger.With().Logger()
 
 	if diagOpts.Level != nil {
 		logLevel := diagOpts.Level.String()
@@ -91,6 +85,7 @@ func (zerologLoggerFactory) ChildLogger(logger LevelLogger, diagOpts DiagOpts) L
 	return &zerologLevelLogger{
 		Logger:               childLogger,
 		cloudPlatformAdapter: zerologLogger.cloudPlatformAdapter,
+		ContextDiagDataFunc:  newZerologContextDataFunc(diagData),
 	}
 }
 
@@ -99,6 +94,7 @@ var _ LoggerFactory = zerologLoggerFactory{}
 type zerologLevelLogger struct {
 	zerolog.Logger
 	cloudPlatformAdapter
+	ContextDiagDataFunc func(*zerolog.Event)
 }
 
 func (l *zerologLevelLogger) appendCloudPlatformLevelData(level LogLevel, evt *zerolog.Event) {
@@ -126,31 +122,31 @@ type zerologLogData struct {
 var _ MsgData = &zerologLogData{}
 
 func (l *zerologLevelLogger) Error() LogLevelEvent {
-	evt := l.Logger.Error()
+	evt := l.Logger.Error().Func(l.ContextDiagDataFunc)
 	l.appendCloudPlatformLevelData(LogLevelErrorValue, evt)
 	return zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Warn() LogLevelEvent {
-	evt := l.Logger.Warn()
+	evt := l.Logger.Warn().Func(l.ContextDiagDataFunc)
 	l.appendCloudPlatformLevelData(LogLevelWarnValue, evt)
 	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Info() LogLevelEvent {
-	evt := l.Logger.Info()
+	evt := l.Logger.Info().Func(l.ContextDiagDataFunc)
 	l.appendCloudPlatformLevelData(LogLevelInfoValue, evt)
 	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Debug() LogLevelEvent {
-	evt := l.Logger.Debug()
+	evt := l.Logger.Debug().Func(l.ContextDiagDataFunc)
 	l.appendCloudPlatformLevelData(LogLevelDebugValue, evt)
 	return &zerologLogLevelEvent{Event: evt}
 }
 
 func (l *zerologLevelLogger) Trace() LogLevelEvent {
-	evt := l.Logger.Trace()
+	evt := l.Logger.Trace().Func(l.ContextDiagDataFunc)
 	l.appendCloudPlatformLevelData(LogLevelTraceValue, evt)
 	return &zerologLogLevelEvent{Event: evt}
 }
@@ -162,7 +158,7 @@ func (l *zerologLevelLogger) WithLevel(level LogLevel) LogLevelEvent {
 		l.Logger.Warn().Err(err).Msgf("Invalid log level: %s. Will use %s", level, zerologLevel)
 	}
 
-	evt := l.Logger.WithLevel(zerologLevel)
+	evt := l.Logger.WithLevel(zerologLevel).Func(l.ContextDiagDataFunc)
 	l.appendCloudPlatformLevelData(level, evt)
 	return &zerologLogLevelEvent{Event: evt}
 }
