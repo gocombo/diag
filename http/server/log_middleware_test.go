@@ -133,4 +133,53 @@ func TestHttpLogMiddleware(t *testing.T) {
 		assert.Contains(t, gotStartHeaders["Authorization"], "*obfuscated, length=")
 		assert.Contains(t, gotStartHeaders["Proxy-Authorization"], "*obfuscated, length=")
 	})
+
+	t.Run("should optionally obfuscate additional headers", func(t *testing.T) {
+		var output bytes.Buffer
+		outputWriter := bufio.NewWriter(&output)
+
+		wantAdditionalHeaders := map[string]string{
+			"X-1-Header" + fake.Lorem().Word(): fake.Lorem().Word(),
+			"X-1-Header" + fake.Lorem().Word(): fake.Lorem().Word(),
+			"X-1-Header" + fake.Lorem().Word(): fake.Lorem().Word(),
+		}
+
+		rootCtx := diag.RootContext(
+			diag.NewRootContextParams().WithOutput(outputWriter),
+		)
+		req := httptest.NewRequest("GET", "/", http.NoBody).WithContext(rootCtx)
+		req.Header.Add("Authorization", fake.Lorem().Sentence(20))
+		req.Header.Add("Proxy-Authorization", fake.Lorem().Sentence(20))
+		for k, v := range wantAdditionalHeaders {
+			req.Header.Add(k, v)
+		}
+		res := httptest.NewRecorder()
+
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(200)
+		})
+		additionalHeaderKeys := make([]string, 0, len(wantAdditionalHeaders))
+		for k := range wantAdditionalHeaders {
+			additionalHeaderKeys = append(additionalHeaderKeys, k)
+		}
+		wrapped := BuildHandler(h, NewHttpLogMiddleware(WithHttpLogObfuscatedHeaders(additionalHeaderKeys...)))
+		wrapped.ServeHTTP(res, req)
+		assert.Equal(t, 200, res.Code)
+
+		outputWriter.Flush()
+		outputLines := strings.Split(strings.Trim(output.String(), "\n"), "\n")
+		assert.Equal(t, 2, len(outputLines))
+
+		var reqStart map[string]interface{}
+		if err := json.Unmarshal([]byte(outputLines[0]), &reqStart); !assert.NoError(t, err) {
+			return
+		}
+		startData := reqStart["data"].(map[string]interface{})
+		gotStartHeaders := startData["headers"].(map[string]interface{})
+		assert.Contains(t, gotStartHeaders["Authorization"], "*obfuscated, length=")
+		assert.Contains(t, gotStartHeaders["Proxy-Authorization"], "*obfuscated, length=")
+		for k := range wantAdditionalHeaders {
+			assert.Contains(t, gotStartHeaders[k], "*obfuscated, length=")
+		}
+	})
 }
