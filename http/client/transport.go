@@ -57,7 +57,7 @@ type transportCfg struct {
 type TransportOption func(*transportCfg)
 
 // WithObfuscateHeaders sets the headers that should be obfuscated in the logs
-func WithObfuscateHeaders(headers []string) TransportOption {
+func WithObfuscateHeaders(headers ...string) TransportOption {
 	return func(cfg *transportCfg) {
 		lowercaseHeaders := make([]string, len(headers))
 		for i, header := range headers {

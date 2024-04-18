@@ -128,7 +128,7 @@ func TestTransport(t *testing.T) {
 		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
 			time.Sleep(20 * time.Millisecond)
 			return wantRes, nil
-		}), WithObfuscateHeaders(obfuscatedHeaders))
+		}), WithObfuscateHeaders(obfuscatedHeaders...))
 		res, err := transport.RoundTrip(req)
 		if !assert.NoError(t, err) {
 			return
