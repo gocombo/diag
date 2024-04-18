@@ -1,3 +1,6 @@
+# v0.0.6
+* http client transport: allow obfuscating additional headers as option
+
 # v0.0.5
 * http log: allow obfuscating additional headers as option
 

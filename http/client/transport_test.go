@@ -97,6 +97,67 @@ func TestTransport(t *testing.T) {
 			assert.Equal(t, v, gotEndHeaders[k])
 		}
 	})
+	t.Run("should obfuscate configured headers", func(t *testing.T) {
+		var output bytes.Buffer
+		outputWriter := bufio.NewWriter(&output)
+
+		rootCtx := diag.RootContext(
+			diag.NewRootContextParams().WithOutput(outputWriter),
+		)
+
+		obfuscatedHeaders := []string{
+			"Authorization",
+			"Proxy-Authorization",
+			"X-1-Header" + fake.Lorem().Word(),
+			"X-2-Header" + fake.Lorem().Word(),
+			"X-3-Header" + fake.Lorem().Word(),
+		}
+
+		req := httptst.RandomHttpReq(testrand.Faker(), rootCtx)
+		wantRes := &http.Response{
+			StatusCode: 200,
+			Body:       http.NoBody,
+			Request:    req,
+			Header:     make(http.Header),
+		}
+		for _, header := range obfuscatedHeaders {
+			req.Header.Add(header, fake.Lorem().Word())
+			wantRes.Header.Add(header, fake.Lorem().Word())
+		}
+
+		transport := NewTransport(roundTripperFn(func(r *http.Request) (*http.Response, error) {
+			time.Sleep(20 * time.Millisecond)
+			return wantRes, nil
+		}), WithObfuscateHeaders(obfuscatedHeaders))
+		res, err := transport.RoundTrip(req)
+		if !assert.NoError(t, err) {
+			return
+		}
+		defer res.Body.Close()
+		assert.Equal(t, wantRes, res)
+
+		logLines, ok := unmarshalLogLines(t, outputWriter, &output)
+		if !ok {
+			return
+		}
+		assert.Equal(t, 2, len(logLines))
+
+		reqStart := logLines[0]
+		reqStartData := reqStart["data"].(map[string]interface{})
+		gotStartHeaders := reqStartData["headers"].(map[string]interface{})
+		for _, v := range obfuscatedHeaders {
+			assert.Contains(t, gotStartHeaders[v], "*obfuscated, length=")
+		}
+
+		reqEnd := logLines[1]
+		reqEndData := reqEnd["data"].(map[string]interface{})
+		assert.Equal(t, float64(res.StatusCode), reqEndData["statusCode"])
+		assert.NotZero(t, reqEndData["durationSec"])
+		gotEndHeaders := reqEndData["headers"].(map[string]interface{})
+		for _, v := range obfuscatedHeaders {
+			assert.Contains(t, gotEndHeaders[v], "*obfuscated, length=")
+		}
+	})
 	t.Run("should log non success responses with warn", func(t *testing.T) {
 		var output bytes.Buffer
 		outputWriter := bufio.NewWriter(&output)
